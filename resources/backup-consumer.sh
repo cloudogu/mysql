@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# this exposed-command can be used to backup dogu databases stored in MariaDB.
+# this exposed-command can be used to backup dogu databases stored in MySQL.
 
 set -o errexit
 set -o pipefail
@@ -17,7 +17,7 @@ done
 if [[ -n ${database_name} ]]; then
 
   # print database dump on StdOut
-  mariadb_dump "${database_name}"
+  mysql_dump "${database_name}"
 
 else
   echo "Please provide following service-account keys: database" >&2;

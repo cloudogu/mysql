@@ -1,7 +1,7 @@
 FROM mysql:5.7.31
 
 LABEL MAINTAINER="hello@cloudogu.com" \
-        NAME="official/mysql" \
+        NAME="testing/mysql" \
         VERSION="5.7.31-1"
 
 ENV USER=mysql \

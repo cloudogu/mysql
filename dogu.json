@@ -1,6 +1,6 @@
 {
-  "Name": "official/mysql",
-  "Version": "10.5.13-1",
+  "Name": "testing/mysql",
+  "Version": "5.7.31-1",
   "DisplayName": "MySQL",
   "Description": "MySQL - Relational database",
   "Url": "https://www.mysql.com/",
@@ -10,7 +10,7 @@
     "db"
   ],
   "Logo": "https://www.mysql.com/common/logos/mysql-logo.svg?v2",
-  "Image": "registry.cloudogu.com/official/mysql",
+  "Image": "registry.cloudogu.com/testing/mysql",
   "Volumes": [
     {
       "Name": "data",
@@ -40,9 +40,6 @@
     {
       "Type": "tcp",
       "Port": 3306
-    },
-    {
-      "Type": "state"
     }
   ],
   "Configuration": [
@@ -63,7 +60,7 @@
     },
     {
       "Name": "container_config/memory_limit",
-      "Description": "Limits the container's memory usage. Use a positive integer value followed by one of these units [b,k,m,g] (byte, kibibyte, mebibyte, gibibyte). If set, 80 % of the given memory will be allocated for the MariaDB's most important performance variable `innodb_buffer_pool_size`. If unset, `innodb_buffer_pool_size` will receive 512 MB. Limits will only apply properly after re-creating the container.",
+      "Description": "Limits the container's memory usage. Use a positive integer value followed by one of these units [b,k,m,g] (byte, kibibyte, mebibyte, gibibyte). If set, 80 % of the given memory will be allocated for the MySQL's most important performance variable `innodb_buffer_pool_size`. If unset, `innodb_buffer_pool_size` will receive 512 MB. Limits will only apply properly after re-creating the container.",
       "Optional": true,
       "Validation": {
         "Type": "BINARY_MEASUREMENT"
