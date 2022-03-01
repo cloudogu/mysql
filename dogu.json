@@ -1,6 +1,6 @@
 {
   "Name": "testing/mysql",
-  "Version": "5.7.31-1",
+  "Version": "5.7.31-2",
   "DisplayName": "MySQL",
   "Description": "MySQL - Relational database",
   "Url": "https://www.mysql.com/",

@@ -2,7 +2,7 @@ FROM mysql:5.7.31
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="testing/mysql" \
-        VERSION="5.7.31-1"
+        VERSION="5.7.31-2"
 
 ENV USER=mysql \
     GROUP=mysql \
