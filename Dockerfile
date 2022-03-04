@@ -16,9 +16,8 @@ ENV PATH="${PATH}:/opt/mysql/bin" \
     USER=mysql \
     GROUP=mysql
 
-RUN curl -L -o /mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-${MYSQL_VERSION}-linux-glibc2.12-x86_64.tar.gz
-
-RUN apt-get update && \
+RUN curl -L -o /mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-${MYSQL_VERSION}-linux-glibc2.12-x86_64.tar.gz && \
+    apt-get update && \
     apt-get install -y libaio1 libaio-dev libnuma-dev libncurses5 && \
     mkdir -p "${MYSQL_HOME}" "${MYSQL_VOLUME}" "${MYSQL_TEMPDIR}" "${MYSQL_ERR_MESSAGES_DIR}" "${MYSQL_MY_CONF_DIR}" "${MYSQL_DOGU_CONF_DIR}" && \
     touch "${MYSQL_ERR_MESSAGES_FILE}" && \
@@ -26,6 +25,7 @@ RUN apt-get update && \
     adduser --gecos "" --home "${MYSQL_VOLUME}" --ingroup "${GROUP}" --disabled-login "${USER}" && \
     tar -xvzf /mysql.tar.gz --strip-components 1 -C "${MYSQL_HOME}" && \
     chown -R "${USER}":"${GROUP}" "${MYSQL_HOME}" "${MYSQL_VOLUME}" "${MYSQL_TEMPDIR}" "${MYSQL_ERR_MESSAGES_DIR}" "${MYSQL_MY_CONF_DIR}" "${MYSQL_DOGU_CONF_DIR}" && \
+    rm /mysql.tar.gz && \
     apt-get clean
 
 COPY resources/ /
