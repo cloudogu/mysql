@@ -66,6 +66,6 @@ function initializeMySql() {
 
   if [ "${FIRST_START_DONE}" == "NO" ]; then
     mysqld --initialize-insecure
-    doguctl config first_start_done --default "YES"
+    doguctl config first_start_done "YES"
   fi
 }

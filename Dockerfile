@@ -2,7 +2,7 @@ FROM registry.cloudogu.com/official/base-debian:11.2-2
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="testing/mysql" \
-        VERSION="5.7.31-3"
+        VERSION="5.7.31-4"
 
 ENV PATH="${PATH}:/opt/mysql/bin" \
     MYSQL_VERSION=5.7.31 \
