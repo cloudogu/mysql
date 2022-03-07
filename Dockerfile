@@ -13,6 +13,7 @@ ENV PATH="${PATH}:/opt/mysql/bin" \
     MYSQL_ERR_MESSAGES_FILE=/opt/mysql/share/errmsg.sys \
     MYSQL_MY_CONF_DIR=/etc/my.cnf.d \
     MYSQL_DOGU_CONF_DIR=/etc/my.cnf.dogu.d \
+    STARTUP_DIR="" \
     USER=mysql \
     GROUP=mysql
 

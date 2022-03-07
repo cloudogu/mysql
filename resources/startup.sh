@@ -15,14 +15,12 @@ echo "                   V///   '°°°°      (/////)      °°°°'   ////  "
 echo "                    V/////(////////\. '°°°' ./////////(///(/'   "
 echo "                       'V/(/////////////////////////////V'      "
 
-source /util.sh
+source "${STARTUP_DIR}/util.sh"
 
 function runMain() {
   renderConfigFile
   initializeMySql
-  doguctl state "ready"
-  echo "Starting mysql..."
-  mysqld || (true && echo "FAILURE" && sleep infinity)
+  startMysql
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

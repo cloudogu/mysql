@@ -12,22 +12,22 @@ load '/workspace/target/bats_libs/bats-file/load.bash'
 setup() {
   export STARTUP_DIR=/workspace/resources
   export WORKDIR=/workspace
-  mariadb_dump="$(mock_create)"
-  export mariadb_dump
+  mysql_dump="$(mock_create)"
+  export mysql_dump
   export bundle
   export PATH="${PATH}:${BATS_TMPDIR}"
-  ln -s "${mariadb_dump}" "${BATS_TMPDIR}/mariadb_dump"
+  ln -s "${mysql_dump}" "${BATS_TMPDIR}/mysql_dump"
 }
 
 teardown() {
   unset STARTUP_DIR
   unset WORKDIR
-  rm "${BATS_TMPDIR}/mariadb_dump"
+  rm "${BATS_TMPDIR}/mysql_dump"
 }
 
 @test "backup-consumer.sh should accept database and dump data" {
-  mock_set_status "${mariadb_dump}" 0
-  mock_set_output "${mariadb_dump}" "DATA GOES HERE HURRAY" 1
+  mock_set_status "${mysql_dump}" 0
+  mock_set_output "${mysql_dump}" "DATA GOES HERE HURRAY" 1
 
   doguServiceAccountData=$(cat <<'END_HEREDOC'
 username: redmine_123456
@@ -41,16 +41,16 @@ END_HEREDOC
   assert_success
   # favour assert_line over assert_output here because Jenkins creates weird output over a non existing ID
   assert_line "DATA GOES HERE HURRAY"
-  assert_equal "$(mock_get_call_num "${mariadb_dump}")" "1"
-  assert_equal "$(mock_get_call_args "${mariadb_dump}" "1")" "redmine_567890"
+  assert_equal "$(mock_get_call_num "${mysql_dump}")" "1"
+  assert_equal "$(mock_get_call_args "${mysql_dump}" "1")" "redmine_567890"
 }
 
 @test "backup-consumer.sh should fail for missing dogu argument" {
-  mock_set_status "${mariadb_dump}" 0
+  mock_set_status "${mysql_dump}" 0
 
   run /workspace/resources/backup-consumer.sh
 
   assert_failure
   assert_output  'Please provide following service-account keys: database'
-  assert_equal "$(mock_get_call_num "${mariadb_dump}")" "0"
+  assert_equal "$(mock_get_call_num "${mysql_dump}")" "0"
 }

@@ -13,32 +13,34 @@ setup() {
   export STARTUP_DIR=/workspace/resources
   export WORKDIR=/workspace
   doguctl="$(mock_create)"
-  mariadb_install_db="$(mock_create)"
-  mariadbd="$(mock_create)"
-  mariadb="$(mock_create)"
+  mysql_install_db="$(mock_create)"
+  mysqld="$(mock_create)"
+  mysql="$(mock_create)"
 
   export PATH="${PATH}:${BATS_TMPDIR}"
   ln -s "${doguctl}" "${BATS_TMPDIR}/doguctl"
-  ln -s "${mariadb_install_db}" "${BATS_TMPDIR}/mariadb_install_db"
-  ln -s "${mariadbd}" "${BATS_TMPDIR}/mariadbd"
-  ln -s "${mariadb}" "${BATS_TMPDIR}/mariadb"
+  ln -s "${mysql_install_db}" "${BATS_TMPDIR}/mysql_install_db"
+  ln -s "${mysqld}" "${BATS_TMPDIR}/mysqld"
+  ln -s "${mysql}" "${BATS_TMPDIR}/mysql"
 }
 
 teardown() {
   unset STARTUP_DIR
   unset WORKDIR
-  rm "${BATS_TMPDIR}/mariadb_install_db"
+  rm "${BATS_TMPDIR}/mysql_install_db"
   rm "${BATS_TMPDIR}/doguctl"
-  rm "${BATS_TMPDIR}/mariadbd"
-  rm "${BATS_TMPDIR}/mariadb"
+  rm "${BATS_TMPDIR}/mysqld"
+  rm "${BATS_TMPDIR}/mysql"
 }
 
-@test "startup with existing db should only start mariadb" {
+@test "startup with existing db should only start mysql" {
   # shellcheck source=/workspace/resources/startup.sh
   source "${STARTUP_DIR}/startup.sh"
 
-  mock_set_status "${mariadbd}" 0
+  mock_set_status "${mysqld}" 0
   mock_set_status "${doguctl}" 0
+  mock_set_output "${doguctl}" "NO" 3
+
 
   DATABASE_STORAGE="$(mktemp)"
   export DATABASE_STORAGE
@@ -46,35 +48,16 @@ teardown() {
   run runMain
 
   assert_success
-  assert_equal "$(mock_get_call_args "${mariadbd}" "1")" "--user=mariadb --datadir=/var/lib/mariadb --log-warnings=1"
-  assert_equal "$(mock_get_call_num "${mariadbd}")" "1"
+  assert_equal "$(mock_get_call_args "${mysqld}" "1")" "--initialize-insecure"
+  assert_equal "$(mock_get_call_args "${mysqld}" "2")" "--log-warnings=1"
+  assert_equal "$(mock_get_call_num "${mysqld}")" "2"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
   assert_equal "$(mock_get_call_args "${doguctl}" "2")" "template /workspace/resources/default-config.cnf.tpl /workspace/resources/etc/my.cnf.dogu.d/default-config.cnf"
-  assert_equal "$(mock_get_call_args "${doguctl}" "3")" "config --default ERROR logging/root"
-  assert_equal "$(mock_get_call_args "${doguctl}" "4")" "state ready"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "4"
-}
-
-@test "initMariaDB" {
-  # shellcheck source=/workspace/resources/startup.sh
-  source "${STARTUP_DIR}/startup.sh"
-
-  mock_set_status "${doguctl}" 0
-  mock_set_status "${mariadb_install_db}" 0
-  mock_set_status "${mariadbd}" 0
-
-  function applySecurityConfiguration () {
-   echo ""
-  }
-
-  run initMariaDB
-
-  assert_success
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "state installing"
-  assert_equal "$(mock_get_call_args "${mariadb_install_db}" "1")" "--user=mariadb --datadir=/var/lib/mariadb"
-
-  # Mock mariadbd will not get tested because of the execution in the background
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
+  assert_equal "$(mock_get_call_args "${doguctl}" "3")" "config first_start_done --default NO"
+  assert_equal "$(mock_get_call_args "${doguctl}" "4")" "config first_start_done YES"
+  assert_equal "$(mock_get_call_args "${doguctl}" "5")" "config --default ERROR logging/root"
+  assert_equal "$(mock_get_call_args "${doguctl}" "6")" "state ready"
+  assert_equal "$(mock_get_call_num "${doguctl}")" "6"
 }
 
 @test "applySecurityConfiguration" {
@@ -82,25 +65,20 @@ teardown() {
   source "${STARTUP_DIR}/startup.sh"
 
   mock_set_status "${doguctl}" 0
-  mock_set_status "${mariadb}" 0
-
-  password="password"
-  mock_set_output "${doguctl}" "${password}" 1
+  mock_set_status "${mysql}" 0
 
   run applySecurityConfiguration
 
   assert_success
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "random"
-  assert_equal "$(mock_get_call_args "${doguctl}" "2")" "wait --port 3306"
-  assert_equal "$(mock_get_call_args "${mariadb}" "1")" "-umariadb -e GRANT ALL PRIVILEGES ON *.* TO root@'%' IDENTIFIED BY \"${password}\" WITH GRANT OPTION;"
-  assert_equal "$(mock_get_call_args "${mariadb}" "2")" "-umariadb -e DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
-  assert_equal "$(mock_get_call_args "${mariadb}" "3")" "-umariadb -e DROP DATABASE test;"
-  assert_equal "$(mock_get_call_args "${mariadb}" "4")" "-umariadb -e DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
-  assert_equal "$(mock_get_call_args "${mariadb}" "5")" "-umariadb -e DELETE FROM mysql.user WHERE User='';"
-  assert_equal "$(mock_get_call_args "${mariadb}" "6")" "-umariadb -e FLUSH PRIVILEGES;"
+  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "wait --port 3306"
+  assert_equal "$(mock_get_call_args "${mysql}" "1")" "-uroot -e DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+  assert_equal "$(mock_get_call_args "${mysql}" "2")" "-uroot -e DROP DATABASE test;"
+  assert_equal "$(mock_get_call_args "${mysql}" "3")" "-uroot -e DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
+  assert_equal "$(mock_get_call_args "${mysql}" "4")" "-uroot -e DELETE FROM mysql.user WHERE User='';"
+  assert_equal "$(mock_get_call_args "${mysql}" "5")" "-uroot -e FLUSH PRIVILEGES;"
 
-  assert_equal "$(mock_get_call_num "${doguctl}")" "2"
-  assert_equal "$(mock_get_call_num "${mariadb}")" "6"
+  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
+  assert_equal "$(mock_get_call_num "${mysql}")" "5"
 }
 
 @test "calculateInnoDbBufferPoolSize() should return 512 MB (in bytes) if no RAM limit was set" {
