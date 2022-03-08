@@ -20,8 +20,9 @@ RUN apt-get update && \
     apt-get install -y libaio1 libaio-dev libnuma-dev libncurses5 procps libc-bin ${DEV_DEPENDENCIES} && \
     /install-mysql.sh && \
     mkdir -p "${MYSQL_VOLUME}" "${MYSQL_MY_CONF_DIR}" "${MYSQL_DOGU_CONF_DIR}" && \
-    chown -R "${USER}":"${GROUP}" "${MYSQL_VOLUME}" "${MYSQL_MY_CONF_DIR}" "${MYSQL_DOGU_CONF_DIR}"
+    chown -R "${USER}":"${GROUP}" "${MYSQL_VOLUME}" "${MYSQL_MY_CONF_DIR}" "${MYSQL_DOGU_CONF_DIR}" && \
     apt purge -y ${DEV_DEPENDENCIES} && \
+    rm -rf /etc/mysql && \
     apt -y autoremove && \
     apt -y clean
 

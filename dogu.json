@@ -7,7 +7,7 @@
   "Category": "Base",
   "Tags": [
     "database",
-    "db",
+    "db"
   ],
   "Logo": "https://www.mysql.com/common/logos/mysql-logo.svg?v2",
   "Image": "registry.cloudogu.com/testing/mysql",
