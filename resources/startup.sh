@@ -19,6 +19,7 @@ source "${STARTUP_DIR}/util.sh"
 
 function runMain() {
   renderConfigFile
+  initializeMySql
   startMysql
 }
 

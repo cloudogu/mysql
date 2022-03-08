@@ -35,3 +35,6 @@ query_cache_type=0
 # Size in bytes for which results larger than this are not stored in the query cache.
 # see: https://mariadb.com/kb/en/server-system-variables/#query_cache_limit
 query_cache_limit=2M
+
+# Disable explicit defaults for timestamps to provide more compatibility
+explicit_defaults_for_timestamp = 0

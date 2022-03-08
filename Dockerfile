@@ -2,15 +2,14 @@ FROM registry.cloudogu.com/official/base-debian:11.2-2
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="testing/mysql" \
-        VERSION="5.7.31-4"
+        VERSION="5.7.37-1"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
-    MYSQL_VERSION=5.7.31 \
     MYSQL_VOLUME=/var/lib/mysql \
     MYSQL_MY_CONF_DIR=/etc/my.cnf.d \
     MYSQL_DOGU_CONF_DIR=/etc/my.cnf.dogu.d \
     STARTUP_DIR="" \
-    DEV_DEPENDENCIES="sudo nano wget gnupg lsb-release" \
+    DEV_DEPENDENCIES="wget gnupg lsb-release" \
     USER=mysql \
     GROUP=mysql
 
@@ -19,10 +18,13 @@ COPY installation-scripts /
 RUN apt-get update && \
     apt-get install -y libaio1 libaio-dev libnuma-dev libncurses5 procps libc-bin ${DEV_DEPENDENCIES} && \
     /install-mysql.sh && \
+    # Make sure all directories exists and have correct permissions
     mkdir -p "${MYSQL_VOLUME}" "${MYSQL_MY_CONF_DIR}" "${MYSQL_DOGU_CONF_DIR}" && \
     chown -R "${USER}":"${GROUP}" "${MYSQL_VOLUME}" "${MYSQL_MY_CONF_DIR}" "${MYSQL_DOGU_CONF_DIR}" && \
-    apt purge -y ${DEV_DEPENDENCIES} && \
+    # Remove pre generated configuration
     rm -rf /etc/mysql && \
+    # Cleanup
+    apt purge -y ${DEV_DEPENDENCIES} && \
     apt -y autoremove && \
     apt -y clean
 

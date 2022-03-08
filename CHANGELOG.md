@@ -8,4 +8,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Add MySQL v5.7.31 (#1)
+- Add MySQL v5.7.37 (#1)
