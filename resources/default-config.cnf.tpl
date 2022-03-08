@@ -35,10 +35,3 @@ query_cache_type=0
 # Size in bytes for which results larger than this are not stored in the query cache.
 # see: https://mariadb.com/kb/en/server-system-variables/#query_cache_limit
 query_cache_limit=2M
-
-# Set lc_messages_dir
-lc_messages_dir = /opt/mysql/share
-lc_messages = en_US
-
-datadir=/opt/mysql/data
-tmpdir=/opt/mysql/temp

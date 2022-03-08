@@ -7,14 +7,14 @@
   "Category": "Base",
   "Tags": [
     "database",
-    "db"
+    "db",
   ],
   "Logo": "https://www.mysql.com/common/logos/mysql-logo.svg?v2",
   "Image": "registry.cloudogu.com/testing/mysql",
   "Volumes": [
     {
       "Name": "data",
-      "Path": "/opt/mysql/data/",
+      "Path": "/var/lib/mysql/",
       "Owner": "1000",
       "Group": "1000"
     }

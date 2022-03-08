@@ -25,7 +25,15 @@ file:
     filetype: file
     contains:
     - 'innodb_buffer_pool_size'
-  /opt/mysql:
+  /var/lib/mysql/data:
+    exists: true
+    owner: mysql
+    filetype: directory
+  /var/lib/mysql/temp:
+    exists: true
+    owner: mysql
+    filetype: directory
+  /var/lib/mysql/share:
     exists: true
     owner: mysql
     filetype: directory
@@ -47,6 +55,6 @@ process:
   mysqld:
     running: true
 mount:
-  /opt/mysql/data:
+  /var/lib/mysql/data:
     exists: true
     filesystem: btrfs

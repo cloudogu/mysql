@@ -101,15 +101,6 @@ function setDoguLogLevel() {
   esac
 }
 
-function initializeMySql() {
-  FIRST_START_DONE="$(doguctl config first_start_done --default "NO")"
-
-  if [ "${FIRST_START_DONE}" == "NO" ]; then
-    mysqld --initialize-insecure
-    doguctl config first_start_done "YES"
-  fi
-}
-
 function logError() {
   errMsg="${1}"
 
@@ -120,5 +111,5 @@ function startMysql() {
   echo "Starting mysql..."
   setDoguLogLevel
   doguctl state "ready"
-  mysqld --log-warnings="${DOGU_LOGLEVEL}"
+  mysqld --datadir="${MYSQL_VOLUME}" --log-warnings="${DOGU_LOGLEVEL}"
 }
