@@ -15,6 +15,7 @@ echo "                   V///   '°°°°      (/////)      °°°°'   ////  "
 echo "                    V/////(////////\. '°°°' ./////////(///(/'   "
 echo "                       'V/(/////////////////////////////V'      "
 
+# shellcheck disable=SC1091
 source "${STARTUP_DIR}/util.sh"
 
 function runMain() {
