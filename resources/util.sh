@@ -12,7 +12,6 @@ function renderConfigFile() {
   export INNODB_BUFFER_POOL_SIZE_IN_BYTES
   echo "Setting innodb_buffer_pool_size to ${INNODB_BUFFER_POOL_SIZE_IN_BYTES} bytes"
 
-  mkdir -p "${DATABASE_CONFIG_DIR}"
   doguctl template "${STARTUP_DIR}/default-config.cnf.tpl" "${DATABASE_CONFIG_DIR}/default-config.cnf"
 }
 
