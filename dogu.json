@@ -40,6 +40,9 @@
     {
       "Type": "tcp",
       "Port": 3306
+    },
+    {
+      "Type": "state"
     }
   ],
   "Configuration": [

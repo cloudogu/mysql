@@ -43,6 +43,9 @@ innodb_autoinc_lock_mode        = 2
 # See: https://dev.mysql.com/doc/refman/8.0/en/innodb-parameters.html#sysvar_innodb_flush_log_at_trx_commit
 innodb_flush_log_at_trx_commit  = 2
 
+# Set bind address for mysqld
+bind-address = 0.0.0.0
+
 [mysqldump]
 # Increase max_allowed_packet size
 # see: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_max_allowed_packet
