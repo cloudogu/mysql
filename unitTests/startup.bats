@@ -12,6 +12,7 @@ load '/workspace/target/bats_libs/bats-file/load.bash'
 setup() {
   export STARTUP_DIR=/workspace/resources
   export WORKDIR=/workspace
+  export MYSQL_VOLUME=/workspace/var/lib/mysql
   doguctl="$(mock_create)"
   mysql_install_db="$(mock_create)"
   mysqld="$(mock_create)"
@@ -49,7 +50,7 @@ teardown() {
 
   assert_success
   assert_equal "$(mock_get_call_args "${mysqld}" "1")" "--initialize-insecure"
-  assert_equal "$(mock_get_call_args "${mysqld}" "2")" "--log-warnings=1"
+  assert_equal "$(mock_get_call_args "${mysqld}" "2")" "--datadir=/workspace/var/lib/mysql --log-warnings=1"
   assert_equal "$(mock_get_call_num "${mysqld}")" "2"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
   assert_equal "$(mock_get_call_args "${doguctl}" "2")" "template /workspace/resources/default-config.cnf.tpl /workspace/resources/etc/my.cnf.dogu.d/default-config.cnf"
