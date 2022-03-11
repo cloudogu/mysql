@@ -1,5 +1,3 @@
-##@ Debian package deployment
-
 # This Makefile holds all targets for deploying and undeploying
 # Uses the variable APT_REPO to determine which apt repos should be used to deploy
 
@@ -42,7 +40,7 @@ else
 endif
 
 .PHONY: deploy
-deploy: add-package-to-repo publish ## Deploy package to apt repository
+deploy: add-package-to-repo publish
 
 define aptly_undeploy
 	PREF=$$(${APTLY} "${APT_API_BASE_URL}/repos/$(1)/packages?q=${ARTIFACT_ID}%20(${VERSION})"); \
@@ -58,8 +56,8 @@ else
 endif
 
 .PHONY: undeploy
-undeploy: deploy-check remove-package-from-repo publish ## Undeploy package from apt repository
+undeploy: deploy-check remove-package-from-repo publish
 
 .PHONE: lint-deb-package
-lint-deb-package: debian ## Lint debian package
+lint-deb-package: debian
 	@lintian -i $(DEBIAN_PACKAGE)

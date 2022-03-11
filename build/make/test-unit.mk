@@ -1,5 +1,3 @@
-##@ Unit testing
-
 UNIT_TEST_DIR=$(TARGET_DIR)/unit-tests
 XUNIT_XML=$(UNIT_TEST_DIR)/unit-tests.xml
 UNIT_TEST_LOG=$(UNIT_TEST_DIR)/unit-tests.log
@@ -9,9 +7,9 @@ PRE_UNITTESTS?=
 POST_UNITTESTS?=
 
 .PHONY: unit-test
-unit-test: $(XUNIT_XML) ## Start unit tests
+unit-test: $(XUNIT_XML)
 
-$(XUNIT_XML): $(SRC) $(GO_JUNIT_REPORT)
+$(XUNIT_XML): $(SRC) $(GOPATH)/bin/go-junit-report
 ifneq ($(strip $(PRE_UNITTESTS)),)
 	@make $(PRE_UNITTESTS)
 endif
@@ -26,7 +24,7 @@ endif
 		cat $(UNIT_TEST_LOG).tmp >> $(UNIT_TEST_LOG) ; \
 		rm -f $(UNIT_TEST_LOG).tmp ; \
 	done
-	@cat $(UNIT_TEST_LOG) | $(GO_JUNIT_REPORT) > $@
+	@cat $(UNIT_TEST_LOG) | go-junit-report > $@
 	@if grep '^FAIL' $(UNIT_TEST_LOG); then \
 		exit 1; \
 	fi

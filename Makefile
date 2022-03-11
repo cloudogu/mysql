@@ -1,55 +1,67 @@
-# Set these to the desired values
-ARTIFACT_ID=
-VERSION=
+MAKEFILES_VERSION=4.7.1
 
-MAKEFILES_VERSION=5.0.0
+.DEFAULT_GOAL:=dogu-release
 
-.DEFAULT_GOAL:=help
-
-# set PRE_COMPILE to define steps that shall be executed before the go build
-# PRE_COMPILE=
-
-# set GO_ENV_VARS to define go environment variables for the go build
-# GO_ENV_VARS = CGO_ENABLED=0
-
-# set PRE_UNITTESTS and POST_UNITTESTS to define steps that shall be executed before or after the unit tests
-# PRE_UNITTESTS?=
-# POST_UNITTESTS?=
-
-# set PREPARE_PACKAGE to define a target that should be executed before the package build
-# PREPARE_PACKAGE=
-
-# set ADDITIONAL_CLEAN to define a target that should be executed before the clean target, e.g.
-# ADDITIONAL_CLEAN=clean_deb
-# clean_deb:
-#     rm -rf ${DEBIAN_BUILD_DIR}
-
-# APT_REPO controls the target apt repository for deploy-debian.mk
-# -> APT_REPO=ces-premium results in a deploy to the premium apt repository
-# -> Everything else results in a deploy to the public repositories
-APT_REPO?=ces
+WORKSPACE=/workspace
+BATS_LIBRARY_DIR=$(TARGET_DIR)/bats_libs
+TESTS_DIR=./unitTests
+BASH_TEST_REPORT_DIR=$(TARGET_DIR)/shell_test_reports
+BASH_TEST_REPORTS=$(BASH_TEST_REPORT_DIR)/TestReport-*.xml
+BATS_ASSERT=$(BATS_LIBRARY_DIR)/bats-assert
+BATS_MOCK=$(BATS_LIBRARY_DIR)/bats-mock
+BATS_SUPPORT=$(BATS_LIBRARY_DIR)/bats-support
+BATS_FILE=$(BATS_LIBRARY_DIR)/bats-file
+BATS_BASE_IMAGE?=bats/bats
+BATS_CUSTOM_IMAGE?=cloudogu/bats
+BATS_TAG?=1.2.1
 
 include build/make/variables.mk
-
-# You may want to overwrite existing variables for target actions to fit into your project.
-
 include build/make/self-update.mk
-include build/make/dependencies-gomod.mk
-include build/make/build.mk
-include build/make/test-common.mk
-include build/make/test-integration.mk
-include build/make/test-unit.mk
-include build/make/static-analysis.mk
-include build/make/clean.mk
-# either package-tar.mk
-include build/make/package-tar.mk
-# or package-debian.mk
-include build/make/package-debian.mk
-# deploy-debian.mk depends on package-debian.mk
-include build/make/deploy-debian.mk
-include build/make/digital-signature.mk
-include build/make/yarn.mk
-include build/make/bower.mk
-# only include this in dogu repositories
 include build/make/release.mk
 
+.PHONY unit-test-shell:
+unit-test-shell: unit-test-shell-$(ENVIRONMENT)
+
+$(BATS_ASSERT):
+	@git clone --depth 1 https://github.com/bats-core/bats-assert $@
+
+$(BATS_MOCK):
+	@git clone --depth 1 https://github.com/grayhemp/bats-mock $@
+
+$(BATS_SUPPORT):
+	@git clone --depth 1 https://github.com/bats-core/bats-support $@
+
+$(BATS_FILE):
+	@git clone --depth 1 https://github.com/bats-core/bats-file $@
+
+$(BASH_SRC):
+	BASH_SRC:=$(shell find "${WORKDIR}" -type f -name "*.sh")
+
+${BASH_TEST_REPORT_DIR}: $(TARGET_DIR)
+	@mkdir -p $(BASH_TEST_REPORT_DIR)
+
+unit-test-shell-ci: $(BASH_SRC) $(BASH_TEST_REPORT_DIR) $(BATS_ASSERT) $(BATS_MOCK) $(BATS_SUPPORT) $(BATS_FILE)
+	@echo "Test shell units on CI server"
+	@make unit-test-shell-generic
+
+unit-test-shell-local: $(BASH_SRC) $(PASSWD) $(ETCGROUP) $(HOME_DIR) buildTestImage $(BASH_TEST_REPORT_DIR) $(BATS_ASSERT) $(BATS_MOCK) $(BATS_SUPPORT) $(BATS_FILE)
+	@echo "Test shell units locally (in Docker)"
+	@docker run --rm \
+		-v $(HOME_DIR):/home/$(USER) \
+		-v $(WORKDIR):$(WORKSPACE) \
+		-w $(WORKSPACE) \
+		--entrypoint="" \
+		$(BATS_CUSTOM_IMAGE):$(BATS_TAG) \
+		${TESTS_DIR}/customBatsEntrypoint.sh make unit-test-shell-generic
+
+unit-test-shell-generic:
+	@bats --formatter junit --output ${BASH_TEST_REPORT_DIR} ${TESTS_DIR}
+
+.PHONY buildTestImage:
+buildTestImage:
+	@echo "Build shell test container"
+	@cd ${TESTS_DIR} && docker build \
+		--build-arg=BATS_BASE_IMAGE=${BATS_BASE_IMAGE} \
+		--build-arg=BATS_TAG=${BATS_TAG} \
+		-t ${BATS_CUSTOM_IMAGE}:${BATS_TAG} \
+		.
