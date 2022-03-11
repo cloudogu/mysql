@@ -1,5 +1,5 @@
 {
-  "Name": "testing/mysql",
+  "Name": "official/mysql",
   "Version": "5.7.37-1",
   "DisplayName": "MySQL",
   "Description": "MySQL - Relational database",
@@ -10,7 +10,7 @@
     "db"
   ],
   "Logo": "https://www.mysql.com/common/logos/mysql-logo.svg?v2",
-  "Image": "registry.cloudogu.com/testing/mysql",
+  "Image": "registry.cloudogu.com/official/mysql",
   "Volumes": [
     {
       "Name": "data",

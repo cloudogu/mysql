@@ -1,7 +1,7 @@
 FROM registry.cloudogu.com/official/base-debian:11.2-2
 
 LABEL MAINTAINER="hello@cloudogu.com" \
-        NAME="testing/mysql" \
+        NAME="official/mysql" \
         VERSION="5.7.37-1"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
