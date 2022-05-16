@@ -36,8 +36,4 @@ EXPOSE 3306
 
 HEALTHCHECK CMD doguctl healthy mysql || exit 1
 
-# Re-using user and group outweighs negative outcomes
-# dockerfile_lint - ignore
-USER "${USER}":"${GROUP}"
-
 CMD ["/startup.sh"]
