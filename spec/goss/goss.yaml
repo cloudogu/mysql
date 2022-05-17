@@ -27,7 +27,7 @@ file:
     - 'innodb_buffer_pool_size'
   /var/lib/mysql/:
     exists: true
-    owner: root
+    owner: mysql
     filetype: directory
 package:
   libaio1:
