@@ -21,13 +21,13 @@ file:
     filetype: file
   /etc/my.cnf.dogu.d/default-config.cnf:
     exists: true
-    owner: mysql
+    owner: root
     filetype: file
     contains:
     - 'innodb_buffer_pool_size'
   /var/lib/mysql/:
     exists: true
-    owner: mysql
+    owner: root
     filetype: directory
 package:
   libaio1:
