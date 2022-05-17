@@ -119,6 +119,5 @@ function startMysql() {
   echo "Starting mysql..."
   setDoguLogLevel
   doguctl state "ready"
-  mysqld --datadir="${MYSQL_VOLUME}" --log-warnings="${DOGU_LOGLEVEL}"
-  mysqld --user=mysql
+  runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}" --log-warnings="${DOGU_LOGLEVEL}"
 }
