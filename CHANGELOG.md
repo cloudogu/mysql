@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v5.7.37-3] - 2022-05-18
+### Changed
+- docker container user is now root (#6)
+- mysqld process runs under 'mysql' user (#6)
+
 ## [v5.7.37-2] - 2022-04-11
 ### Changed
 - Upgrade packages to fix CVE-2018-25032; #4
