@@ -17,12 +17,14 @@ setup() {
   mysql_install_db="$(mock_create)"
   mysqld="$(mock_create)"
   mysql="$(mock_create)"
+  runuser="$(mock_create)"
 
   export PATH="${PATH}:${BATS_TMPDIR}"
   ln -s "${doguctl}" "${BATS_TMPDIR}/doguctl"
   ln -s "${mysql_install_db}" "${BATS_TMPDIR}/mysql_install_db"
   ln -s "${mysqld}" "${BATS_TMPDIR}/mysqld"
   ln -s "${mysql}" "${BATS_TMPDIR}/mysql"
+  ln -s "${runuser}" "${BATS_TMPDIR}/runuser"
 }
 
 teardown() {
@@ -32,6 +34,7 @@ teardown() {
   rm "${BATS_TMPDIR}/doguctl"
   rm "${BATS_TMPDIR}/mysqld"
   rm "${BATS_TMPDIR}/mysql"
+  rm "${BATS_TMPDIR}/runuser"
 }
 
 @test "startup with existing db should only start mysql" {
@@ -41,6 +44,7 @@ teardown() {
   mock_set_status "${mysqld}" 0
   mock_set_status "${doguctl}" 0
   mock_set_output "${doguctl}" "NO" 3
+  mock_set_status "${runuser}" 0
 
 
   DATABASE_STORAGE="$(mktemp)"
@@ -50,8 +54,9 @@ teardown() {
 
   assert_success
   assert_equal "$(mock_get_call_args "${mysqld}" "1")" "--initialize-insecure"
-  assert_equal "$(mock_get_call_args "${mysqld}" "2")" "--datadir=/workspace/var/lib/mysql --log-warnings=1"
-  assert_equal "$(mock_get_call_num "${mysqld}")" "2"
+  assert_equal "$(mock_get_call_num "${mysqld}")" "1"
+  assert_equal "$(mock_get_call_args "${runuser}" "1")" "-u mysql -- mysqld --datadir=/workspace/var/lib/mysql --log-warnings=1"
+  assert_equal "$(mock_get_call_num "${runuser}")" "1"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
   assert_equal "$(mock_get_call_args "${doguctl}" "2")" "template /workspace/resources/default-config.cnf.tpl /workspace/resources/etc/my.cnf.dogu.d/default-config.cnf"
   assert_equal "$(mock_get_call_args "${doguctl}" "3")" "config first_start_done --default NO"
