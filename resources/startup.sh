@@ -20,6 +20,7 @@ source "${STARTUP_DIR}/util.sh"
 
 function runMain() {
   echo "Removing mysql lockfile if existing..."
+  rm -f /var/run/mysqld/mysqld.sock.lock
   rm -f /var/run/mysqld/mysqld.sock
 
   renderConfigFile
