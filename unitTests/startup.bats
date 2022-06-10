@@ -136,6 +136,40 @@ teardown() {
   assert_equal "$(mock_get_call_num "${doguctl}")" "1"
 }
 
+@test "removeSocketIfExists should remove socket file" {
+  mkdir -p "${STARTUP_DIR}/var/run/mysqld"
+  touch "${STARTUP_DIR}/var/run/mysqld/mysqld.sock.lock"
+  touch "${STARTUP_DIR}/var/run/mysqld/mysqld.sock"
+
+  assert_file_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock.lock"
+  assert_file_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock"
+
+  source "${STARTUP_DIR}/startup.sh"
+
+  run removeSocketIfExists
+
+  assert_success
+  assert_output --partial 'Removing mysql lockfile if existing...'
+  assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock.lock"
+  assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock"
+}
+
+@test "removeSocketIfExists should not fail when file not exists" {
+  mkdir -p "${STARTUP_DIR}/var/run/mysqld"
+
+  assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock.lock"
+  assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock"
+
+  source "${STARTUP_DIR}/startup.sh"
+
+  run removeSocketIfExists
+
+  assert_success
+  assert_output --partial 'Removing mysql lockfile if existing...'
+  assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock.lock"
+  assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock"
+}
+
 @test "calculateInnoDbBufferPoolSize() should log error line when memory_limit was detected" {
   mock_set_status "${doguctl}" 0
   mock_set_output "${doguctl}" "1g" 1
