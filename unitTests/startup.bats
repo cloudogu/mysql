@@ -152,6 +152,8 @@ teardown() {
   assert_output --partial 'Removing mysql lockfile if existing...'
   assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock.lock"
   assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock"
+  rm -rf "${STARTUP_DIR}/var/lib/mysql"
+  rm -rf "${STARTUP_DIR}/var/run/mysql"
 }
 
 @test "removeSocketIfExists should not fail when file not exists" {
@@ -168,6 +170,12 @@ teardown() {
   assert_output --partial 'Removing mysql lockfile if existing...'
   assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock.lock"
   assert_file_not_exist "${STARTUP_DIR}/var/run/mysqld/mysqld.sock"
+
+  # Necessary cleanup to prevent having root-permission directories/files in the project folder after test execution.
+  # Using rmdir to make this test fail in case resources/var should actually contain files later.
+  rmdir "${STARTUP_DIR}/var/run/mysqld"
+  rmdir "${STARTUP_DIR}/var/run"
+  rmdir "${STARTUP_DIR}/var"
 }
 
 @test "calculateInnoDbBufferPoolSize() should log error line when memory_limit was detected" {
