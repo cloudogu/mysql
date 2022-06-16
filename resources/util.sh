@@ -121,3 +121,9 @@ function startMysql() {
   doguctl state "ready"
   runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}" --log-warnings="${DOGU_LOGLEVEL}"
 }
+
+function removeSocketIfExists(){
+  echo "Removing mysql lockfile if existing..."
+  rm -f "${STARTUP_DIR}/var/run/mysqld/mysqld.sock.lock"
+  rm -f "${STARTUP_DIR}/var/run/mysqld/mysqld.sock"
+}
