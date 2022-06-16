@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v5.7.37-4] - 2022-06-16
+### Changed
+- Remove mysql lockfile (/var/run/mysqld/mysqld.sock) at dogu startup (#8)
+
 ## [v5.7.37-3] - 2022-05-18
 ### Changed
 - docker container user is now root (#6)

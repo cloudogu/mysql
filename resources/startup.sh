@@ -19,6 +19,7 @@ echo "                       'V/(/////////////////////////////V'      "
 source "${STARTUP_DIR}/util.sh"
 
 function runMain() {
+  removeSocketIfExists
   renderConfigFile
   initializeMySql
   startMysql
