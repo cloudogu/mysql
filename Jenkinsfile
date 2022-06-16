@@ -106,7 +106,7 @@ timestamps {
                 }
 
                 stage('Add Github-Release') {
-                    github.createReleaseWithChangelog(releaseVersion, changelog)
+                    github.createReleaseWithChangelog(releaseVersion, changelog, "main")
                 }
             }
 
