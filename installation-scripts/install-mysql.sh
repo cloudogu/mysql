@@ -4,10 +4,15 @@ set -o nounset
 set -o pipefail
 
 wget https://dev.mysql.com/get/mysql-apt-config_0.8.18-1_all.deb
+# Select the correct mysql package
+# 1. '1': Select operating system 'debian buster'
+# 2. '1': Select the option to choose the mysql version
+# 3. '2': Select mysql8.0
+# 4. 'ok': Finish configuration
 dpkg -i mysql-apt-config_0.8.18-1_all.deb <<EOF
 1
 1
-mysql-5.7
+2
 ok
 EOF
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
