@@ -82,20 +82,20 @@ function applySecurityConfiguration() {
 }
 
 function setDoguLogLevel() {
-  currentLogLevel=$(doguctl config --default "ERROR" "logging/root")
+  currentLogLevel=$(doguctl config --default "WARN" "logging/root")
 
   case "${currentLogLevel}" in
-    "WARN")
-      DOGU_LOGLEVEL=2
+    "ERROR")
+      DOGU_LOGLEVEL=1
     ;;
     "INFO")
       DOGU_LOGLEVEL=3
     ;;
     "DEBUG")
-      DOGU_LOGLEVEL=9
+      DOGU_LOGLEVEL=3
     ;;
     *)
-      DOGU_LOGLEVEL=1
+      DOGU_LOGLEVEL=2
     ;;
   esac
 }
@@ -120,7 +120,7 @@ function startMysql() {
   echo "Starting mysql..."
   setDoguLogLevel
   doguctl state "ready"
-  runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}"
+  runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}" --log_error_verbosity=${DOGU_LOGLEVEL}
 }
 
 function startMysqlInBackground() {

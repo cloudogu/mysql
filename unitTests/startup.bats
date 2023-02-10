@@ -43,7 +43,7 @@ teardown() {
 
   mock_set_status "${mysqld}" 0
   mock_set_status "${doguctl}" 0
-  mock_set_output "${doguctl}" "NO" 3
+  mock_set_output "${doguctl}" "NO" 4
   mock_set_status "${runuser}" 0
 
 
@@ -55,15 +55,16 @@ teardown() {
   assert_success
   assert_equal "$(mock_get_call_args "${mysqld}" "1")" "--initialize-insecure"
   assert_equal "$(mock_get_call_num "${mysqld}")" "1"
-  assert_equal "$(mock_get_call_args "${runuser}" "1")" "-u mysql -- mysqld --datadir=/workspace/var/lib/mysql --log-warnings=1"
+  assert_equal "$(mock_get_call_args "${runuser}" "1")" "-u mysql -- mysqld --datadir=/workspace/var/lib/mysql --log_error_verbosity=2"
   assert_equal "$(mock_get_call_num "${runuser}")" "1"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
   assert_equal "$(mock_get_call_args "${doguctl}" "2")" "template /workspace/resources/default-config.cnf.tpl /workspace/resources/etc/my.cnf.dogu.d/default-config.cnf"
-  assert_equal "$(mock_get_call_args "${doguctl}" "3")" "config first_start_done --default NO"
-  assert_equal "$(mock_get_call_args "${doguctl}" "4")" "config first_start_done YES"
-  assert_equal "$(mock_get_call_args "${doguctl}" "5")" "config --default ERROR logging/root"
-  assert_equal "$(mock_get_call_args "${doguctl}" "6")" "state ready"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "6"
+  assert_equal "$(mock_get_call_args "${doguctl}" "3")" "state"
+  assert_equal "$(mock_get_call_args "${doguctl}" "4")" "config first_start_done --default NO"
+  assert_equal "$(mock_get_call_args "${doguctl}" "5")" "config first_start_done YES"
+  assert_equal "$(mock_get_call_args "${doguctl}" "6")" "config --default WARN logging/root"
+  assert_equal "$(mock_get_call_args "${doguctl}" "7")" "state ready"
+  assert_equal "$(mock_get_call_num "${doguctl}")" "7"
 }
 
 @test "applySecurityConfiguration" {
