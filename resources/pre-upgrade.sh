@@ -12,33 +12,18 @@ function run_preupgrade() {
     exit 0
   fi
 
+  echo "Set registry flag so startup script waits for post-upgrade to finish..."
+  doguctl state "upgrading"
+
   if versionXLessOrEqualThanY "${FROM_VERSION}" "5.7.37-4" ; then
-    if [[ -f "/var/lib/mysql/configured" &&  -f "/var/lib/mysql/prepared" ]]; then
-      echo "=============================================================================================="
-      echo "This was upgrade attempt 3: Starting the actual upgrade."
-      echo "=============================================================================================="
-      exit 0
-    fi
-
-    if [[ -f "/var/lib/mysql/configured" ]]; then
-      sed -i 's/removeSocketIfExists/sleep\ infinity/' /startup.sh
-      echo "=============================================================================================="
-      echo "This was upgrade attempt 2: Mysql is now finally prepared for upgrade. Try again to start the upgrade."
-      echo "=============================================================================================="
-      touch "/var/lib/mysql/prepared"
-      mysqladmin shutdown
-    fi
-
-    echo "innodb-fast-shutdown=0" >> /etc/my.cnf
-    echo "innodb_force_recovery=1" >> /etc/my.cnf
-    rm /var/lib/mysql/ib_logfile*
-    touch /var/lib/mysql/configured
-
-    echo "=============================================================================================="
-    echo "This was upgrade attempt 1: Mysql was restarted. Redo upgrade attempt twice for a success."
-    echo "=============================================================================================="
-
-    mysqladmin shutdown
+    TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
+    # shellcheck disable=SC2086 # Word splitting is intentional here
+    mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
+    mysql --skip-column-names -A mysql -e "SELECT CONCAT('CREATE USER \'', user, '\'@\'', host, '\' IDENTIFIED WITH \'mysql_native_password\' AS \'', authentication_string,'\';') FROM mysql.user WHERE user NOT IN ('mysql.session','mysql.sys','debian-sys-maint','root');"  >> /alldb.sql
+    mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g' >> /alldb.sql
+    rm -rf /var/lib/mysql/*
+    doguctl config --rm first_start_done
+    mv /alldb.sql /var/lib/mysql/alldb.sql
   fi
 
   echo "Mysql pre-upgrade done"

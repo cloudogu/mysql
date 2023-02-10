@@ -21,6 +21,12 @@ source "${STARTUP_DIR}/util.sh"
 function runMain() {
   removeSocketIfExists
   renderConfigFile
+
+  while [[ "$(doguctl state)" == "upgrading" ]]; do
+    echo "Upgrade script is running. Waiting..."
+    sleep 3
+  done
+
   initializeMySql
   startMysql
 }
