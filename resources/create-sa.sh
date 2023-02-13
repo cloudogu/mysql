@@ -13,9 +13,13 @@ fi
 
     # create database
     mysql -uroot -e "CREATE DATABASE ${SCHEMA} DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;"
-    
+
+    # create user
+    mysql -uroot -e "CREATE USER '${SCHEMA}'@'%' IDENTIFIED BY '${PASSWORD}';"
+
     # grant access for user
-    mysql -uroot -e "grant all on ${SCHEMA}.* to \"${SCHEMA}\"@\"%\" identified by \"${PASSWORD}\";"
+    USER="${SCHEMA}"
+    mysql -uroot -e "GRANT ALL PRIVILEGES ON ${USER}.* TO '${USER}'@'%';"
     mysql -uroot -e "FLUSH PRIVILEGES;" >/dev/null 2>&1
 } >/dev/null 2>&1
 
