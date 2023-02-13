@@ -15,7 +15,7 @@ function run_preupgrade() {
   echo "Set registry flag so startup script waits for post-upgrade to finish..."
   doguctl state "upgrading"
 
-  if versionXLessOrEqualThanY "${FROM_VERSION}" "5.7.37-4" ; then
+  if versionXLessOrEqualThanY "${FROM_VERSION}" "5.7.37" ; then
     TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
     # shellcheck disable=SC2086 # Word splitting is intentional here
     mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
