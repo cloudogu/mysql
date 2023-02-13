@@ -15,7 +15,14 @@ function run_preupgrade() {
   echo "Set registry flag so startup script waits for post-upgrade to finish..."
   doguctl state "upgrading"
 
-  if versionXLessOrEqualThanY "${FROM_VERSION}" "5.7.37" ; then
+  if versionXLessThanY "${FROM_VERSION}" "8.0.32-1" && versionXLessOrEqualThanY "8.0.32-1" "${TO_VERSION}"; then
+    dumpData
+  fi
+
+  echo "Mysql pre-upgrade done"
+}
+
+function dumpData(){
     TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
     # shellcheck disable=SC2086 # Word splitting is intentional here
     mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
@@ -24,9 +31,6 @@ function run_preupgrade() {
     rm -rf /var/lib/mysql/*
     doguctl config --rm first_start_done
     mv /alldb.sql /var/lib/mysql/alldb.sql
-  fi
-
-  echo "Mysql pre-upgrade done"
 }
 
 # versionXLessOrEqualThanY returns true if X is less than or equal to Y; otherwise false
@@ -83,6 +87,15 @@ function versionXLessOrEqualThanY() {
   fi
 
   return 1
+}
+
+# versionXLessThanY returns true if X is less than Y; otherwise false
+function versionXLessThanY() {
+  if [[ "${1}" == "${2}" ]]; then
+    return 1
+  fi
+
+  versionXLessOrEqualThanY "${1}" "${2}"
 }
 
 # make the script only run when executed, not when sourced from bats tests
