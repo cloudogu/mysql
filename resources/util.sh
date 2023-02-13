@@ -82,20 +82,20 @@ function applySecurityConfiguration() {
 }
 
 function setDoguLogLevel() {
-  currentLogLevel=$(doguctl config --default "ERROR" "logging/root")
+  currentLogLevel=$(doguctl config --default "WARN" "logging/root")
 
   case "${currentLogLevel}" in
-    "WARN")
-      DOGU_LOGLEVEL=2
+    "ERROR")
+      DOGU_LOGLEVEL=1
     ;;
     "INFO")
       DOGU_LOGLEVEL=3
     ;;
     "DEBUG")
-      DOGU_LOGLEVEL=9
+      DOGU_LOGLEVEL=3
     ;;
     *)
-      DOGU_LOGLEVEL=1
+      DOGU_LOGLEVEL=2
     ;;
   esac
 }
@@ -104,6 +104,7 @@ function initializeMySql() {
   FIRST_START_DONE="$(doguctl config first_start_done --default "NO")"
 
   if [ "${FIRST_START_DONE}" == "NO" ]; then
+    echo "Initialize Mysql..."
     mysqld --initialize-insecure
     doguctl config first_start_done "YES"
   fi
@@ -119,7 +120,19 @@ function startMysql() {
   echo "Starting mysql..."
   setDoguLogLevel
   doguctl state "ready"
-  runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}" --log-warnings="${DOGU_LOGLEVEL}"
+  runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}" --log_error_verbosity=${DOGU_LOGLEVEL}
+}
+
+function startMysqlInBackground() {
+  echo "Starting mysql in background..."
+  echo "${MYSQL_VOLUME}"
+  runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}" &
+
+  while [[ "$(mysql -e "show databases;" &> /dev/null; echo $?)" == "1" ]]; do
+    echo "Waiting for mysql to start..."
+    sleep 3
+  done
+  sleep 20
 }
 
 function removeSocketIfExists(){

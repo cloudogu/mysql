@@ -2,14 +2,15 @@ FROM registry.cloudogu.com/official/base-debian:11.2-2
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="official/mysql" \
-        VERSION="5.7.37-4"
+        VERSION="8.0.32-1"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
     MYSQL_VOLUME=/var/lib/mysql \
     MYSQL_MY_CONF_DIR=/etc/my.cnf.d \
     MYSQL_DOGU_CONF_DIR=/etc/my.cnf.dogu.d \
     STARTUP_DIR="" \
-    DEV_DEPENDENCIES="wget gnupg lsb-release"
+    DEV_DEPENDENCIES="wget gnupg lsb-release" \
+    WORKDIR=""
 
 COPY installation-scripts /
 

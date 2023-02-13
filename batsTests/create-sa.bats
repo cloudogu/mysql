@@ -43,10 +43,11 @@ teardown() {
   assert_equal "${lines[0]}" 'database: mydogu_rndDbName'
   assert_equal "${lines[1]}" 'username: mydogu_rndDbName'
   assert_equal "${lines[2]}" 'password: s3cR37p455w0rD'
-  assert_equal "$(mock_get_call_num "${mysql}")" "3"
+  assert_equal "$(mock_get_call_num "${mysql}")" "4"
   assert_equal "$(mock_get_call_args "${mysql}" "1")" "-uroot -e CREATE DATABASE mydogu_rndDbName DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;"
-  assert_equal "$(mock_get_call_args "${mysql}" "2")" '-uroot -e grant all on mydogu_rndDbName.* to "mydogu_rndDbName"@"%" identified by "s3cR37p455w0rD";'
-  assert_equal "$(mock_get_call_args "${mysql}" "3")" "-uroot -e FLUSH PRIVILEGES;"
+  assert_equal "$(mock_get_call_args "${mysql}" "2")" "-uroot -e CREATE USER 'mydogu_rndDbName'@'%' IDENTIFIED BY 's3cR37p455w0rD';"
+  assert_equal "$(mock_get_call_args "${mysql}" "3")" "-uroot -e GRANT ALL PRIVILEGES ON mydogu_rndDbName.* TO 'mydogu_rndDbName'@'%';"
+  assert_equal "$(mock_get_call_args "${mysql}" "4")" '-uroot -e FLUSH PRIVILEGES;'
   assert_equal "$(mock_get_call_num "${doguctl}")" "2"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" "random -l 6"
   assert_equal "$(mock_get_call_args "${doguctl}" "2")" "random"

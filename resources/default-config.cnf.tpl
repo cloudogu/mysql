@@ -17,19 +17,9 @@ max_heap_table_size=32M
 tmp_table_size=32M
 innodb_read_io_threads=32
 
-# Size in bytes for which results larger than this are not stored in the query cache.
-# see: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_limit
-query_cache_limit=2M
-
 # This will improve performance as short queries are not logged to the slow query log
 # see: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_min_examined_row_limit
 min_examined_row_limit         = 100
-
-innodb_file_format              = BARRACUDA
-# See: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_type
-query_cache_type                = 1
-# See: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_query_cache_size
-query_cache_size                = 60M
 
 # See: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_sort_buffer_size
 sort_buffer_size                = 5M

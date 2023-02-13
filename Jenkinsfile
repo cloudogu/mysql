@@ -19,7 +19,7 @@ timestamps {
             def bats_custom_image = "cloudogu/bats"
             def bats_tag = "1.2.1"
 
-            def batsImage = docker.build("${bats_custom_image}:${bats_tag}", "--build-arg=BATS_BASE_IMAGE=${bats_base_image} --build-arg=BATS_TAG=${bats_tag} ./unitTests")
+            def batsImage = docker.build("${bats_custom_image}:${bats_tag}", "--build-arg=BATS_BASE_IMAGE=${bats_base_image} --build-arg=BATS_TAG=${bats_tag} ./batsTests")
             try {
                 sh "mkdir -p target"
                 sh "mkdir -p testdir"
@@ -106,7 +106,7 @@ timestamps {
                 }
 
                 stage('Add Github-Release') {
-                    github.createReleaseWithChangelog(releaseVersion, changelog)
+                    github.createReleaseWithChangelog(releaseVersion, changelog, "main")
                 }
             }
 
