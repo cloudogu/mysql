@@ -12,25 +12,8 @@ function run_postupgrade() {
     exit 0
   fi
 
-  if [[ -f "/var/lib/mysql/alldb.sql" ]] ; then
-    while [[ ! -f "${DATABASE_CONFIG_DIR}/default-config.cnf" ]]; do
-      echo "Wait for preparations"
-      sleep 3
-    done
-
-    mv "/var/lib/mysql/alldb.sql" "/alldb.sql"
-
-    initializeMySql
-    startMysqlInBackground
-
-    echo "Reimport data from last version..."
-    mysql -u root < "/alldb.sql"
-
-    echo "Cleanup db..."
-    rm -f "/var/lib/mysql/alldb.sql"
-
-    echo "Shutdown mysql"
-    mysqladmin shutdown
+  if [[ -f "${WORKDIR}/var/lib/mysql/alldb.sql" ]]; then
+    restoreDump
   fi
 
   echo "Set registry flag so startup script can start afterwards..."
@@ -39,9 +22,29 @@ function run_postupgrade() {
   echo "Mysql post-upgrade done"
 }
 
+restoreDump() {
+  while [[ ! -f "${DATABASE_CONFIG_DIR}/default-config.cnf" ]]; do
+    echo "Wait for preparations"
+    sleep 3
+  done
+
+  mv "${WORKDIR}/var/lib/mysql/alldb.sql" "${WORKDIR}/alldb.sql"
+
+  initializeMySql
+  startMysqlInBackground
+
+  echo "Reimport data from last version..."
+  mysql -u root <"${WORKDIR}/alldb.sql"
+
+  echo "Cleanup db..."
+  rm -f "${WORKDIR}/var/lib/mysql/alldb.sql"
+
+  echo "Shutdown mysql"
+  mysqladmin shutdown
+}
+
 # make the script only run when executed, not when sourced from bats tests
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   source /util.sh
   run_postupgrade "$@"
 fi
-

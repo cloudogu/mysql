@@ -43,7 +43,6 @@ teardown() {
   }
 
   run run_preupgrade "5.7.37-1" "8.0.32-1"
-  echo $?
 
   assert_equal "$(mock_get_call_num "${doguctl}")" "1"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'state upgrading'
@@ -61,7 +60,6 @@ teardown() {
   }
 
   run run_preupgrade "5.7.37-1" "5.7.37-4"
-  echo $?
 
   assert_equal "$(mock_get_call_num "${doguctl}")" "1"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'state upgrading'
@@ -77,7 +75,6 @@ teardown() {
   }
 
   run run_preupgrade "8.0.32-1" "8.0.32-4"
-  echo $?
 
   assert_equal "$(mock_get_call_num "${doguctl}")" "1"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'state upgrading'
