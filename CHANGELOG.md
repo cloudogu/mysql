@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Upgrade mysql to Version 8.0.32 (#10)
+- Do not use flag `--log-warnings` anymore as it has been removed in mysql8
+  - Use `log_error_verbosity` instead and set default log level to WARN.
 
 ## [v5.7.37-4] - 2022-06-16
 ### Changed

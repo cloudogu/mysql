@@ -9,7 +9,8 @@ ENV PATH="${PATH}:/var/lib/mysql/bin" \
     MYSQL_MY_CONF_DIR=/etc/my.cnf.d \
     MYSQL_DOGU_CONF_DIR=/etc/my.cnf.dogu.d \
     STARTUP_DIR="" \
-    DEV_DEPENDENCIES="wget gnupg lsb-release"
+    DEV_DEPENDENCIES="wget gnupg lsb-release" \
+    WORKDIR=""
 
 COPY installation-scripts /
 

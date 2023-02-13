@@ -34,6 +34,14 @@
       "Name": "upgrade-notification",
       "Description": "Informs the user on critical updates",
       "Command": "/upgrade-notification.sh"
+    },
+    {
+      "Name": "pre-upgrade",
+      "Command": "/pre-upgrade.sh"
+    },
+    {
+      "Name": "post-upgrade",
+      "Command": "/post-upgrade.sh"
     }
   ],
   "HealthChecks": [
