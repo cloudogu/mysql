@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.0.33-2] - 2023-06-27
+### Added
+- Config options for [resource requirements](https://github.com/cloudogu/dogu-development-docs/blob/main/docs/important/relevant_functionalities_en.md#resource-requirements) (#14)
+
 ## [v8.0.33-1] - 2023-04-24
 ### Changed
 - Update Base-image to 11.6-1 (#12)
