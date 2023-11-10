@@ -2,21 +2,19 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-
-wget https://dev.mysql.com/get/mysql-apt-config_0.8.18-1_all.deb
+# see for latest version: https://dev.mysql.com/downloads/repo/apt/
+wget https://dev.mysql.com/get/mysql-apt-config_0.8.28-1_all.deb
 # Select the correct mysql package
-# 1. '1': Select operating system 'debian buster'
-# 2. '1': Select the option to choose the mysql version
-# 3. '2': Select mysql8.0
-# 4. 'ok': Finish configuration
-dpkg -i mysql-apt-config_0.8.18-1_all.deb <<EOF
+# 1. '1': Select the option to choose the mysql version
+# 2. '1': Select mysql8.0
+# 3. 'ok': Finish configuration
+dpkg -i mysql-apt-config_0.8.28-1_all.deb <<EOF
 1
 1
-2
 ok
 EOF
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
-apt update
+apt-get update
 # This will install mysql with empty root password
 export DEBIAN_FRONTEND=noninteractive
 apt-get -q -y install mysql-community-server
