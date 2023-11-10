@@ -15,9 +15,7 @@ function run_preupgrade() {
   echo "Set registry flag so startup script waits for post-upgrade to finish..."
   doguctl state "upgrading"
 
-  if versionXLessThanY "${FROM_VERSION}" "8.0.32-1" && versionXLessOrEqualThanY "8.0.32-1" "${TO_VERSION}"; then
-    dumpData
-  fi
+  dumpData
 
   echo "Mysql pre-upgrade done"
 }
