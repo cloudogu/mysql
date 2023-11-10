@@ -32,6 +32,6 @@ COPY resources /
 
 EXPOSE 3306
 
-HEALTHCHECK CMD doguctl healthy mysql || exit 1
+HEALTHCHECK --interval=5s CMD doguctl healthy mysql || exit 1
 
 CMD ["/startup.sh"]
