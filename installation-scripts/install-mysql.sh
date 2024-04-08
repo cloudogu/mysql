@@ -15,6 +15,7 @@ dpkg -i mysql-apt-config_0.8.18-1_all.deb <<EOF
 2
 ok
 EOF
+# https://repo.mysql.com/apt/ubuntu/conf/distributions
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
 apt update
 # This will install mysql with empty root password
