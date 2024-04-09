@@ -6,9 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v8.0.33-3] - 2024-04-09
+### Fixed
+- Fixed CVE-2023-25775 CVE-2023-5178
+
 ### Changed
 - Upgrade Makefiles to 9.0.3
-- Upgrade packages to fix CVE-2023-25775 & CVE-2023-5178
 
 ## [v8.0.33-2] - 2023-06-27
 ### Added
