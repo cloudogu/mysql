@@ -17,6 +17,13 @@
       "Path": "/var/lib/mysql/",
       "Owner": "101",
       "Group": "101"
+    },
+    {
+      "Name": "localConfig",
+      "Path": "/var/ces/config",
+      "Owner": "1000",
+      "Group": "1000",
+      "NeedsBackup": true
     }
   ],
   "ExposedCommands": [
