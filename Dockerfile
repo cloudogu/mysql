@@ -1,4 +1,4 @@
-FROM registry.cloudogu.com/official/base-debian:11.6-1
+FROM registry.cloudogu.com/official/base-debian:11.8-2
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="official/mysql" \
