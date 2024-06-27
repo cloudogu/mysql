@@ -22,13 +22,17 @@ function run_preupgrade() {
 
 function dumpData(){
     TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
-    # shellcheck disable=SC2086 # Word splitting is intentional here
-    mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
-    mysql --skip-column-names -A mysql -e "SELECT CONCAT('CREATE USER \'', user, '\'@\'', host, '\' IDENTIFIED WITH \'mysql_native_password\' AS \'', authentication_string,'\';') FROM mysql.user WHERE user NOT IN ('mysql.session','mysql.sys','debian-sys-maint','root');"  >> /alldb.sql
-    mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g' >> /alldb.sql
-    rm -rf /var/lib/mysql/*
-    doguctl config --rm first_start_done
-    mv /alldb.sql /var/lib/mysql/alldb.sql
+    if [[ $TABLES == "NULL" ]]; then
+      echo "TABLES are NULL. No available Data to DUMP available."
+    else
+      # shellcheck disable=SC2086 # Word splitting is intentional here
+      mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
+      mysql --skip-column-names -A mysql -e "SELECT CONCAT('CREATE USER \'', user, '\'@\'', host, '\' IDENTIFIED WITH \'mysql_native_password\' AS \'', authentication_string,'\';') FROM mysql.user WHERE user NOT IN ('mysql.session','mysql.sys','debian-sys-maint','root');"  >> /alldb.sql
+      mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g' >> /alldb.sql
+      rm -rf /var/lib/mysql/*
+      doguctl config --rm first_start_done
+      mv /alldb.sql /var/lib/mysql/alldb.sql
+    fi
 }
 
 # versionXLessOrEqualThanY returns true if X is less than or equal to Y; otherwise false
