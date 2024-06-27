@@ -64,7 +64,8 @@ teardown() {
 
   run run_postupgrade "5.7.37-1" "8.0.32-1"
 
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
+  assert_equal "$(mock_get_call_num "${doguctl}")" "2"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'state upgrade done'
+  assert_equal "$(mock_get_call_args "${doguctl}" "2")" 'config --rm local_state'
   assert_success
 }

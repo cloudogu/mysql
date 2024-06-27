@@ -59,12 +59,13 @@ teardown() {
   assert_equal "$(mock_get_call_num "${runuser}")" "1"
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
   assert_equal "$(mock_get_call_args "${doguctl}" "2")" "template /workspace/resources/default-config.cnf.tpl /workspace/resources/etc/my.cnf.dogu.d/default-config.cnf"
-  assert_equal "$(mock_get_call_args "${doguctl}" "3")" "state"
+  assert_equal "$(mock_get_call_args "${doguctl}" "3")" "config local_state -d empty"
   assert_equal "$(mock_get_call_args "${doguctl}" "4")" "config first_start_done --default NO"
   assert_equal "$(mock_get_call_args "${doguctl}" "5")" "config first_start_done YES"
   assert_equal "$(mock_get_call_args "${doguctl}" "6")" "config --default WARN logging/root"
   assert_equal "$(mock_get_call_args "${doguctl}" "7")" "state ready"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "7"
+  assert_equal "$(mock_get_call_args "${doguctl}" "8")" "config --rm local_state"
+  assert_equal "$(mock_get_call_num "${doguctl}")" "8"
 }
 
 @test "applySecurityConfiguration" {

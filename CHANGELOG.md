@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade mysql to 8.0.35
 - Upgrade debian base image to 12.2-1
 
+## [v8.0.33-4] - 2024-06-10
+### Changed
+- [#19] Move state that should be persistent between restarts to local config.
+
+## [v8.0.33-3] - 2024-04-09
+### Fixed
+- Fixed CVE-2023-25775 CVE-2023-5178
+
+### Changed
+- Upgrade Makefiles to 9.0.3
+
 ## [v8.0.33-2] - 2023-06-27
 ### Added
 - Config options for [resource requirements](https://github.com/cloudogu/dogu-development-docs/blob/main/docs/important/relevant_functionalities_en.md#resource-requirements) (#14)
