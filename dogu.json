@@ -15,7 +15,7 @@
     {
       "Name": "data",
       "Path": "/var/lib/mysql/",
-      "Owner": "101",
+      "Owner": "100",
       "Group": "101"
     },
     {
