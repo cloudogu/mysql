@@ -24,6 +24,8 @@ function dumpData(){
     TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
     if [[ $TABLES == "NULL" ]]; then
       echo "TABLES are NULL. No available Data to DUMP."
+      rm -rf /var/lib/mysql/*
+      doguctl config --rm first_start_done
     else
       # shellcheck disable=SC2086 # Word splitting is intentional here
       mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
