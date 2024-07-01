@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Upgrade mysql to 8.0.35
-- Upgrade debian base image to 12.2-1
+- Upgrade mysql to 8.0.38
+- Upgrade debian base image to 12.5-4
+- Upgrade makefiles to 9.1.0
 
 ## [v8.0.33-4] - 2024-06-10
 ### Changed
