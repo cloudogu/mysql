@@ -29,7 +29,20 @@ function dumpData(){
     else
       # shellcheck disable=SC2086 # Word splitting is intentional here
       mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
-      mysql --skip-column-names -A mysql -e "SELECT CONCAT('CREATE USER \'', user, '\'@\'', host, '\' IDENTIFIED WITH \'mysql_native_password\' AS \'', authentication_string,'\';') FROM mysql.user WHERE user NOT IN ('mysql.session','mysql.sys','debian-sys-maint','root');"  >> /alldb.sql
+
+      local USERS
+      USERS="$(mysql -uroot mysql -e "select GROUP_CONCAT(User) FROM user WHERE NOT User LIKE '%mysql.%' AND NOT User='root';" | tail -n +2 | sed 's/,/ /g')"
+
+      local user
+      for user in ${USERS}
+      do
+          local CREATE
+          CREATE="$(mysql --skip-column-names -A mysql -e "SET @@SESSION.print_identified_with_as_hex = 1; SHOW CREATE USER '${user}'")"
+          echo "${CREATE};" >> /alldb.sql
+      done
+
+      echo "flush privileges;" >> /alldb.sql
+
       mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g' >> /alldb.sql
       rm -rf /var/lib/mysql/*
       doguctl config --rm first_start_done
