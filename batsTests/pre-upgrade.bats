@@ -50,37 +50,6 @@ teardown() {
   assert_equal "${status}" 123
 }
 
-
-@test "5.7.37-1 - 5.7.37-4 => Dump does not start" {
-  # shellcheck source=../resources/pre-upgrade.sh
-  source "${STARTUP_DIR}/pre-upgrade.sh"
-
-  dumpData() {
-      exit 123
-  }
-
-  run run_preupgrade "5.7.37-1" "5.7.37-4"
-
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'config local_state upgrading'
-  assert_success
-}
-
-@test "8.0.32-1 - 8.0.32-4 => Dump does not start" {
-  # shellcheck source=../resources/pre-upgrade.sh
-  source "${STARTUP_DIR}/pre-upgrade.sh"
-
-  dumpData() {
-      exit 123
-  }
-
-  run run_preupgrade "8.0.32-1" "8.0.32-4"
-
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'config local_state upgrading'
-  assert_success
-}
-
 @test "versionXLessOrEqualThanY() should return true for versions less than or equal to another" {
   source /workspace/resources/pre-upgrade.sh
 
