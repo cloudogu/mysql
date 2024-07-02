@@ -16,8 +16,8 @@ dpkg -i "mysql-apt-config_${VERSION}_all.deb" <<EOF
 1
 ok
 EOF
+# https://repo.mysql.com/apt/ubuntu/conf/distributions
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
 apt-get update
 # This will install mysql with empty root password
 export DEBIAN_FRONTEND=noninteractive
