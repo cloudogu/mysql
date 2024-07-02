@@ -1,4 +1,4 @@
-FROM registry.cloudogu.com/official/base-debian:11.8-2
+FROM registry.cloudogu.com/official/base-debian:12.5-4
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="official/mysql" \
@@ -15,8 +15,8 @@ ENV PATH="${PATH}:/var/lib/mysql/bin" \
 COPY installation-scripts /
 
 RUN set -eux \
- && apt update \
- && apt upgrade -y \
+ && apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y libaio1 libaio-dev libnuma-dev libncurses5 procps libc-bin ${DEV_DEPENDENCIES} \
  && /install-mysql.sh \
     # Make sure all directories exists and have correct permissions
@@ -24,14 +24,14 @@ RUN set -eux \
     # Remove pre generated configuration
  && rm -rf /etc/mysql \
     # Cleanup
- && apt purge -y ${DEV_DEPENDENCIES} \
- && apt -y autoremove \
- && apt -y clean
+ && apt-get purge -y ${DEV_DEPENDENCIES} \
+ && apt-get -y autoremove \
+ && apt-get -y clean
 
 COPY resources /
 
 EXPOSE 3306
 
-HEALTHCHECK CMD doguctl healthy mysql || exit 1
+HEALTHCHECK --interval=5s CMD doguctl healthy mysql || exit 1
 
 CMD ["/startup.sh"]
