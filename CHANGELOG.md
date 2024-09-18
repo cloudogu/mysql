@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.0.38-3] - 2024-09-18
+### Changed
+- Relicense to AGPL-3.0-only
+
 ## [v8.0.38-2] - 2024-08-07
 ### Changed
 - Upgrade debian base image to 12.6-1
