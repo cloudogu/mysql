@@ -33,17 +33,22 @@ function dumpData(){
       local USERS
       USERS="$(mysql -uroot mysql -e "select GROUP_CONCAT(User) FROM user WHERE NOT User LIKE '%mysql.%' AND NOT User='root';" | tail -n +2 | sed 's/,/ /g')"
 
-      local user
-      for user in ${USERS}
-      do
-          local CREATE
-          CREATE="$(mysql --skip-column-names -A mysql -e "SET @@SESSION.print_identified_with_as_hex = 1; SHOW CREATE USER '${user}'")"
-          echo "${CREATE};" >> /alldb.sql
-      done
+      if [[ $USERS != "NULL" ]]; then
+        local user
+        for user in ${USERS}
+        do
+            local CREATE
+            CREATE="$(mysql --skip-column-names -A mysql -e "SET @@SESSION.print_identified_with_as_hex = 1; SHOW CREATE USER '${user}'")"
+            echo "${CREATE};" >> /alldb.sql
+        done
+      fi
 
       echo "flush privileges;" >> /alldb.sql
 
-      mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g' >> /alldb.sql
+      if [[ $USERS != "NULL" ]]; then
+        mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g' >> /alldb.sql
+      fi
+
       rm -rf /var/lib/mysql/*
       doguctl config --rm first_start_done
       mv /alldb.sql /var/lib/mysql/alldb.sql
