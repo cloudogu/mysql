@@ -37,16 +37,26 @@ function dumpData(){
         local user
         for user in ${USERS}
         do
+            echo "DROP user IF EXISTS '${user}';" >> /alldb.sql
+        done
+
+        echo "flush privileges;" >> /alldb.sql
+
+        for user in ${USERS}
+        do
             local CREATE
             CREATE="$(mysql --skip-column-names -A mysql -e "SET @@SESSION.print_identified_with_as_hex = 1; SHOW CREATE USER '${user}'")"
             echo "${CREATE};" >> /alldb.sql
         done
-      fi
+        local GRANT
+        GRANT="$(mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g')"
 
-      echo "flush privileges;" >> /alldb.sql
+        # this is needed for any version from 8.4 and up
+        # SET_USER_ID Privilege was removed as deprecated
+        # https://dev.mysql.com/doc/refman/8.4/en/mysql-nutshell.html
+        GRANT=$(echo "${GRANT}" |  sed 's/SET_USER_ID,/SET_ANY_DEFINER,ALLOW_NONEXISTENT_DEFINER,/g')
 
-      if [[ $USERS != "NULL" ]]; then
-        mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g' >> /alldb.sql
+        echo "${GRANT};" >> /alldb.sql
       fi
 
       rm -rf /var/lib/mysql/*
