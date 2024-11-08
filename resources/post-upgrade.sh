@@ -13,7 +13,7 @@ function run_postupgrade() {
   fi
 
   if [[ -f "${WORKDIR}/var/lib/mysql/alldb.sql" ]]; then
-    restoreDump
+    restoreDump "${FROM_VERSION}" "${TO_VERSION}"
   fi
 
   echo "Set registry flag so startup script can start afterwards..."
@@ -24,6 +24,8 @@ function run_postupgrade() {
 }
 
 restoreDump() {
+  local FROM_VERSION="${1}"
+  local TO_VERSION="${2}"
   while [[ ! -f "${DATABASE_CONFIG_DIR}/default-config.cnf" ]]; do
     echo "Wait for preparations"
     sleep 3
@@ -38,7 +40,8 @@ restoreDump() {
   mysql -u root <"${WORKDIR}/alldb.sql"
 
   echo "Cleanup db..."
-  rm -f "${WORKDIR}/var/lib/mysql/alldb.sql"
+  # keep Backup if something happens with during the migration
+  mv "${WORKDIR}/var/lib/mysql/alldb.sql" "${WORKDIR}/var/lib/mysql/alldb_${FROM_VERSION}_to_${TO_VERSION}_$(date +%s).sql"
 
   echo "Shutdown mysql"
   mysqladmin shutdown

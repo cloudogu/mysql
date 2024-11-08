@@ -22,7 +22,7 @@ function run_preupgrade() {
 
 function dumpData(){
     TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
-    if [[ $TABLES == "NULL" ]]; then
+    if [[ "${TABLES}" == "NULL" ]]; then
       echo "TABLES are NULL. No available Data to DUMP."
       rm -rf /var/lib/mysql/*
       doguctl config --rm first_start_done
@@ -33,15 +33,19 @@ function dumpData(){
       local USERS
       USERS="$(mysql -uroot mysql -e "select GROUP_CONCAT(User) FROM user WHERE NOT User LIKE '%mysql.%' AND NOT User='root';" | tail -n +2 | sed 's/,/ /g')"
 
-      if [[ $USERS != "NULL" ]]; then
+      # as users may exists within the dump but need to be recreated with all privileges the user must be dropped first
+      # otherwise the creation would result in an ERROR 1396 (HY000) - see https://stackoverflow.com/a/6332971
+      if [[ "${USERS}" != "NULL" ]]; then
         local user
         for user in ${USERS}
         do
             echo "DROP user IF EXISTS '${user}';" >> /alldb.sql
         done
 
+        # flush privileges just once instead of once per user
         echo "flush privileges;" >> /alldb.sql
 
+        # recreate users
         for user in ${USERS}
         do
             local CREATE
