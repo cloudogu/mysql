@@ -41,7 +41,7 @@ restoreDump() {
 
   echo "Cleanup db..."
   # keep Backup if something happens with during the migration
-  mv "${WORKDIR}/var/lib/mysql/alldb.sql" "${WORKDIR}/var/lib/mysql/alldb_${FROM_VERSION}_to_${TO_VERSION}_$(date +%s).sql"
+  mv "${WORKDIR}/alldb.sql" "${WORKDIR}/var/lib/mysql/alldb_${FROM_VERSION}_to_${TO_VERSION}_$(date +%s).sql"
 
   echo "Shutdown mysql"
   mysqladmin shutdown
