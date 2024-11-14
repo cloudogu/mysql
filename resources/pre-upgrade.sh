@@ -22,7 +22,7 @@ function run_preupgrade() {
 
 function dumpData(){
     TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
-    if [[ $TABLES == "NULL" ]]; then
+    if [[ "${TABLES}" == "NULL" ]]; then
       echo "TABLES are NULL. No available Data to DUMP."
       rm -rf /var/lib/mysql/*
       doguctl config --rm first_start_done
@@ -33,17 +33,39 @@ function dumpData(){
       local USERS
       USERS="$(mysql -uroot mysql -e "select GROUP_CONCAT(User) FROM user WHERE NOT User LIKE '%mysql.%' AND NOT User='root';" | tail -n +2 | sed 's/,/ /g')"
 
-      local user
-      for user in ${USERS}
-      do
-          local CREATE
-          CREATE="$(mysql --skip-column-names -A mysql -e "SET @@SESSION.print_identified_with_as_hex = 1; SHOW CREATE USER '${user}'")"
-          echo "${CREATE};" >> /alldb.sql
-      done
+      # as users may exists within the dump but need to be recreated with all privileges the user must be dropped first
+      # otherwise the creation would result in an ERROR 1396 (HY000) - see https://stackoverflow.com/a/6332971
+      if [[ "${USERS}" != "NULL" ]]; then
+        local user
+        for user in ${USERS}
+        do
+            echo "DROP user IF EXISTS '${user}';" >> /alldb.sql
+        done
 
-      echo "flush privileges;" >> /alldb.sql
+        # flush privileges just once instead of once per user
+        echo "flush privileges;" >> /alldb.sql
 
-      mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g' >> /alldb.sql
+        # recreate users
+        for user in ${USERS}
+        do
+            local CREATE
+            CREATE="$(mysql --skip-column-names -A mysql -e "SET @@SESSION.print_identified_with_as_hex = 1; SHOW CREATE USER '${user}'")"
+            echo "${CREATE};" >> /alldb.sql
+        done
+
+        echo "flush privileges;" >> /alldb.sql
+
+        local GRANT
+        GRANT="$(mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g')"
+
+        # this is needed for any version from 8.4 and up
+        # SET_USER_ID Privilege was removed as deprecated
+        # https://dev.mysql.com/doc/refman/8.4/en/mysql-nutshell.html
+        GRANT=$(echo "${GRANT}" |  sed 's/SET_USER_ID,/SET_ANY_DEFINER,ALLOW_NONEXISTENT_DEFINER,/g')
+
+        echo "${GRANT};" >> /alldb.sql
+      fi
+
       rm -rf /var/lib/mysql/*
       doguctl config --rm first_start_done
       mv /alldb.sql /var/lib/mysql/alldb.sql

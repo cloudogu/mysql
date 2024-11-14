@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.4.2-1] - 2024-11-14
+### Changed
+- Upgrade mysql to 8.4.2 (LTS)
+
 ## [v8.0.38-3] - 2024-09-18
 ### Changed
 - Relicense to AGPL-3.0-only
