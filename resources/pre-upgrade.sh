@@ -52,6 +52,9 @@ function dumpData(){
             CREATE="$(mysql --skip-column-names -A mysql -e "SET @@SESSION.print_identified_with_as_hex = 1; SHOW CREATE USER '${user}'")"
             echo "${CREATE};" >> /alldb.sql
         done
+
+        echo "flush privileges;" >> /alldb.sql
+
         local GRANT
         GRANT="$(mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g')"
 
