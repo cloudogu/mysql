@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [v8.4.2-1] - 2024-11-14
+> **WARNING!** This release contains an error so that this version was retracted. The next release will remove this error.
+
 ### Changed
 - Upgrade mysql to 8.4.2 (LTS)
 
