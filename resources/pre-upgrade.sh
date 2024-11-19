@@ -15,12 +15,15 @@ function run_preupgrade() {
   echo "Set registry flag so startup script waits for post-upgrade to finish..."
   doguctl config "local_state" "upgrading"
 
-  dumpData
+  dumpData "${FROM_VERSION}" "${TO_VERSION}"
 
   echo "Mysql pre-upgrade done"
 }
 
 function dumpData(){
+    FROM_VERSION="${1}"
+    TO_VERSION="${2}"
+
     TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
     if [[ "${TABLES}" == "NULL" ]]; then
       echo "TABLES are NULL. No available Data to DUMP."
@@ -29,6 +32,23 @@ function dumpData(){
     else
       # shellcheck disable=SC2086 # Word splitting is intentional here
       mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
+
+      local DEPRECATED_PLUGIN
+      DEPRECATED_PLUGIN="$(mysql -uroot mysql -e "select count(*) FROM user WHERE plugin LIKE 'mysql_native_password';" | tail -n +2)"
+
+      if [[ "${DEPRECATED_PLUGIN}" -gt "0" ]]; then
+        TO_MAJOR_VERSION=$(echo "${TO_VERSION}" | cut -d '.' -f1)
+        TO_MINOR_VERSION=$(echo "${TO_VERSION}" | cut -d '.' -f2)
+        # Update to 8.4
+        if [[ "${TO_MAJOR_VERSION}" == "8" && "${TO_MINOR_VERSION}" -ge "4" ]]; then
+          echo "WARNING: ⚠️ database contains deprecated password hashes with 'mysql_native_password' plugin - this plugin is deprecated and should be removed"
+        fi
+        # Update to 9.x
+        if [[ "${TO_MAJOR_VERSION}" -ge "9" ]]; then
+          echo "ERROR: ❌ database contains invalid password hashes with 'mysql_native_password' plugin - this plugin is deactivated in mysql 9 and above"
+          exit 1
+        fi
+      fi
 
       local USERS
       USERS="$(mysql -uroot mysql -e "select GROUP_CONCAT(User) FROM user WHERE NOT User LIKE '%mysql.%' AND NOT User='root';" | tail -n +2 | sed 's/,/ /g')"
@@ -45,11 +65,18 @@ function dumpData(){
         # flush privileges just once instead of once per user
         echo "flush privileges;" >> /alldb.sql
 
+        FROM_MAJOR_VERSION=$(echo "${FROM_VERSION}" | cut -d '.' -f1)
+
         # recreate users
         for user in ${USERS}
         do
             local CREATE
-            CREATE="$(mysql --skip-column-names -A mysql -e "SET @@SESSION.print_identified_with_as_hex = 1; SHOW CREATE USER '${user}'")"
+            local PRINT_HEX
+            PRINT_HEX=""
+            if [[ ${FROM_MAJOR_VERSION} -ge 8 ]]; then
+              PRINT_HEX="SET @@SESSION.print_identified_with_as_hex = 1; "
+            fi
+            CREATE="$(mysql --skip-column-names -A mysql -e "${PRINT_HEX}SHOW CREATE USER '${user}'")"
             echo "${CREATE};" >> /alldb.sql
         done
 

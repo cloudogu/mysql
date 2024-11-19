@@ -31,17 +31,18 @@ restoreDump() {
     sleep 3
   done
 
-  mv "${WORKDIR}/var/lib/mysql/alldb.sql" "${WORKDIR}/alldb.sql"
+  local DUMP_FILE_NAME
+  # no files allowed in /var/lib/mysql during init of database
+  DUMP_FILE_NAME="${WORKDIR}/alldb_${FROM_VERSION}_to_${TO_VERSION}_$(date +%s).sql"
+
+  # keep Backup if something happens with during the migration
+  mv "${WORKDIR}/var/lib/mysql/alldb.sql" "${DUMP_FILE_NAME}"
 
   initializeMySql
   startMysqlInBackground
 
   echo "Reimport data from last version..."
-  mysql -u root <"${WORKDIR}/alldb.sql"
-
-  echo "Cleanup db..."
-  # keep Backup if something happens with during the migration
-  mv "${WORKDIR}/alldb.sql" "${WORKDIR}/var/lib/mysql/alldb_${FROM_VERSION}_to_${TO_VERSION}_$(date +%s).sql"
+  mysql -u root <"${DUMP_FILE_NAME}"
 
   echo "Shutdown mysql"
   mysqladmin shutdown

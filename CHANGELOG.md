@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Upgrade mysql to 8.4.3 (LTS)
+- Save SQL-Dumpfile for maintenance purposes
+- Enable deprecated "mysql_native_password" encryption plugin for legacy support
+- Warning if database contains deprecated user password encryption
 
 ## [v8.4.2-1] - 2024-11-14
 > **WARNING!** This release contains an error so that this version was retracted. The next release will remove this error.
