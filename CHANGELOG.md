@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - Upgrade mysql to 8.4.4
+- Upgrade ces-build-lib to 4.0.1, dogu-build-lib to 3.0.0
+### Security
+- add Trivy scan to Jenkins pipeline
 
 ## [v8.4.3-1] - 2024-11-19
 - Upgrade mysql to 8.4.3 (LTS)
