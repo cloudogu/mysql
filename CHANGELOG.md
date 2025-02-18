@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Upgrade mysql to 8.4.4
 - Upgrade ces-build-lib to 4.0.1, dogu-build-lib to 3.0.0
+- Upgrade makefiles
 ### Security
 - add Trivy scan to Jenkins pipeline
 

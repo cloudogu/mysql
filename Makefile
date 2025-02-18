@@ -1,4 +1,4 @@
-MAKEFILES_VERSION=9.1.0
+MAKEFILES_VERSION=9.5.3
 
 .DEFAULT_GOAL:=dogu-release
 
@@ -18,6 +18,7 @@ BATS_TAG?=1.2.1
 include build/make/variables.mk
 include build/make/self-update.mk
 include build/make/release.mk
+include build/make/prerelease.mk
 include build/make/k8s-dogu.mk
 
 .PHONY unit-test-shell:
