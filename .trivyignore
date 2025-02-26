@@ -1,0 +1,6 @@
+# This zlib1g CVE is falsely detected. It is not present in the Debian 12
+# package and thus ignored as "not affected". The trivy project however
+# interprets this as ignored as "wont fix" and causes a detection.
+# See: https://github.com/madler/zlib/pull/843#issuecomment-2130408505
+CVE-2023-45853
+
