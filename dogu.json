@@ -80,7 +80,7 @@
       "Name": "container_config/memory_limit",
       "Description": "Limits the container's memory usage. Use a positive integer value followed by one of these units [b,k,m,g] (byte, kibibyte, mebibyte, gibibyte).",
       "Optional": true,
-      "Default": "400m",
+      "Default": "600m",
       "Validation": {
         "Type": "BINARY_MEASUREMENT"
       }
@@ -89,7 +89,7 @@
       "Name": "container_config/memory_request",
       "Description": "Requests the container's minimal memory requirement. Use a positive integer value followed by one of these units [b,k,m,g] (byte, kibibyte, mebibyte, gibibyte). This configuration is only applicable to the Multinode-EcoSystem.",
       "Optional": true,
-      "Default": "400m",
+      "Default": "600m",
       "Validation": {
         "Type": "BINARY_MEASUREMENT"
       }
