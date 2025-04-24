@@ -1,5 +1,5 @@
 #!groovy
-@Library(['github.com/cloudogu/ces-build-lib@4.0.1', 'github.com/cloudogu/dogu-build-lib@v3.0.0'])
+@Library(['github.com/cloudogu/ces-build-lib@4.2.0', 'github.com/cloudogu/dogu-build-lib@v3.2.0'])
 import com.cloudogu.ces.cesbuildlib.*
 import com.cloudogu.ces.dogubuildlib.*
 
@@ -14,22 +14,9 @@ timestamps {
             shellCheck("resources/create-sa.sh resources/remove-sa.sh resources/startup.sh resources/upgrade-notification.sh resources/backup-consumer.sh")
         }
 
-        stage('Shell tests') {
-            def bats_base_image = "bats/bats"
-            def bats_custom_image = "cloudogu/bats"
-            def bats_tag = "1.2.1"
-
-            def batsImage = docker.build("${bats_custom_image}:${bats_tag}", "--build-arg=BATS_BASE_IMAGE=${bats_base_image} --build-arg=BATS_TAG=${bats_tag} ./batsTests")
-            try {
-                sh "mkdir -p target"
-                sh "mkdir -p testdir"
-
-                batsContainer = batsImage.inside("--entrypoint='' -v ${WORKSPACE}:/workspace -v ${WORKSPACE}/testdir:/usr/share/webapps") {
-                    sh "make unit-test-shell-ci"
-                }
-            } finally {
-                junit allowEmptyResults: true, testResults: 'target/shell_test_reports/*.xml'
-            }
+        stage('Bats Tests') {
+            Bats bats = new Bats(this, docker)
+            bats.checkAndExecuteTests()
         }
     }
 

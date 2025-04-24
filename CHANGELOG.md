@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.4.4-2] - 2025-04-24
+
+### Changed
+- [#33] Set sensible resource requests and limits
+
 ## [v8.4.4-1] - 2025-02-27
 ### Changed
 - Upgrade mysql to 8.4.4
