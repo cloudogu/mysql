@@ -2,10 +2,10 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-DEBIAN_SHA_256_SUM="455ec3690765cff58a4123ba498921fb58fb76c46465e9659180848e997452b6"
+DEBIAN_SHA_256_SUM="9a7b0d074e7854725de10af2fdfccfba5749fd0f3c2d89b3529ee2e4035cc217"
 # Version of debian file containing the installation files for mysql in different versions
 # This is NOT the actual mysql version to install
-VERSION="0.8.33-1"
+VERSION="0.8.34-1"
 # see for latest version: https://dev.mysql.com/downloads/repo/apt/
 wget "https://dev.mysql.com/get/mysql-apt-config_${VERSION}_all.deb"
 echo "${DEBIAN_SHA_256_SUM} mysql-apt-config_${VERSION}_all.deb" | sha256sum -c -
