@@ -1,10 +1,11 @@
-FROM registry.cloudogu.com/official/base-debian:12.7-3
+FROM registry.cloudogu.com/official/base-debian:12.9-1
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="official/mysql" \
         VERSION="8.4.4-2"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
+    MYSQL_VERSION="8.4.5" \
     MYSQL_VOLUME=/var/lib/mysql \
     MYSQL_MY_CONF_DIR=/etc/my.cnf.d \
     MYSQL_DOGU_CONF_DIR=/etc/my.cnf.dogu.d \
@@ -18,7 +19,7 @@ RUN set -eux \
  && apt-get update \
  && apt-get upgrade -y \
  && apt-get install -y libaio1 libaio-dev libnuma-dev libncurses5 procps libc-bin ${DEV_DEPENDENCIES} \
- && /install-mysql.sh \
+ && /install-mysql.sh "${MYSQL_VERSION}" \
     # Make sure all directories exists and have correct permissions
  && mkdir -p "${MYSQL_VOLUME}" "${MYSQL_MY_CONF_DIR}" "${MYSQL_DOGU_CONF_DIR}" \
     # Remove pre generated configuration
