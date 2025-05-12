@@ -17,6 +17,12 @@ max_heap_table_size=32M
 tmp_table_size=32M
 innodb_read_io_threads=32
 
+# Explicitly disable NUMA interleave policies
+# NUMA support requires the SYS_NICE capability.
+# If NUMA tuning for high-end-hardware is required, the dogu must be started
+# with SYS_NICE capability and this configuration must be changed.
+innodb_numa_interleave=0
+
 # This will improve performance as short queries are not logged to the slow query log
 # see: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_min_examined_row_limit
 min_examined_row_limit         = 100
