@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v8.4.5-1] - 2025-05-12
 - [#35] Upgrade MySQL to 8.4.5
 - [#35] Upgrade Debian base image to 12.9-1
 - [#35] Upgrade mysql-apt-config utility to 0.8.34
