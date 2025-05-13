@@ -4,7 +4,7 @@
 # but at least 512 MB should be used (recommended settings vary from 2 to 16 GB depending on the actual DB server load)
 # see https://wiki.alpinelinux.org/wiki/Production_DataBases_:_mysql
 innodb_buffer_pool_size={{ .Env.Get "INNODB_BUFFER_POOL_SIZE_IN_BYTES"}}
-innodb_log_file_size=16M
+innodb_redo_log_capacity=16777216
 
 # The Performance Schema is a feature for monitoring server performance in which the DB server populates internal tables with said monitoring data.
 # see https://dev.mysql.com/doc/refman/5.7/en/performance-schema-startup-configuration.html
