@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.4.5-2] - 2025-05-14
+### Changed
+- This version contains only technical changes:
+  - Disable NUMA interleave policies.
+  - Replace deprecated options with their superseding successors.
+
 ## [v8.4.5-1] - 2025-05-12
+### Changed
 - [#35] Upgrade MySQL to 8.4.5
 - [#35] Upgrade Debian base image to 12.9-1
 - [#35] Upgrade mysql-apt-config utility to 0.8.34

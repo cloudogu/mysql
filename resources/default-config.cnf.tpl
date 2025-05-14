@@ -4,7 +4,7 @@
 # but at least 512 MB should be used (recommended settings vary from 2 to 16 GB depending on the actual DB server load)
 # see https://wiki.alpinelinux.org/wiki/Production_DataBases_:_mysql
 innodb_buffer_pool_size={{ .Env.Get "INNODB_BUFFER_POOL_SIZE_IN_BYTES"}}
-innodb_log_file_size=16M
+innodb_redo_log_capacity=16777216
 
 # The Performance Schema is a feature for monitoring server performance in which the DB server populates internal tables with said monitoring data.
 # see https://dev.mysql.com/doc/refman/5.7/en/performance-schema-startup-configuration.html
@@ -16,6 +16,12 @@ max_connections=100
 max_heap_table_size=32M
 tmp_table_size=32M
 innodb_read_io_threads=32
+
+# Explicitly disable NUMA interleave policies
+# NUMA support requires the SYS_NICE capability.
+# If NUMA tuning for high-end-hardware is required, the dogu must be started
+# with SYS_NICE capability and this configuration must be changed.
+innodb_numa_interleave=0
 
 # This will improve performance as short queries are not logged to the slow query log
 # see: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_min_examined_row_limit
