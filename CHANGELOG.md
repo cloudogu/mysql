@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- [#38] Integrated Shared Pipeline (Jenkinsfile)
+
 ### Security
 - [#38] Fix [CVE-2023-6879](https://nvd.nist.gov/vuln/detail/CVE-2023-6879) 
 - [#38] Fix [CVE-2025-48174](https://nvd.nist.gov/vuln/detail/CVE-2025-48174)
