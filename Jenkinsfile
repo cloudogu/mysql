@@ -1,10 +1,3 @@
-#!groovy
-@Library([
-  'github.com/cloudogu/build-lib-wrapper@develop',
-  'ces-build-lib', // versioning handled by Global Trusted Pipeline Libraries in Jenkins
-  'dogu-build-lib' // versioning handled by Global Trusted Pipeline Libraries in Jenkins
-]) _
-
 def postVerifyStage = { ecoSystem ->
     stage('End-to-end tests') {
         try {
@@ -35,11 +28,10 @@ sharedBuildPipeline([
     sshCredentials       : "jenkins-gcloud-ces-operations-internal",
     backendUser          : "cesmarvin-setup",
     shellScripts         : "resources/create-sa.sh resources/remove-sa.sh resources/startup.sh resources/upgrade-notification.sh resources/backup-consumer.sh",
-    checkMarkdown        : true,
     doBatsTests          : true,
     dependencies         : ["usermgt", "cas"],
 
 
     // Pass your custom stage here
-    postVerify           : postVerifyStage
+    postVerifyStage      : postVerifyStage
 ])
