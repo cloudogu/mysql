@@ -26,8 +26,8 @@ def postVerifyStage = { ecoSystem ->
 
 sharedBuildPipeline([
     doguName             : "mysql",
-    preBuildAgent        : 'sos',
-    buildAgent           : 'sos',
+    preBuildAgent        : 'docker',
+    buildAgent           : 'vagrant',
     doguDirectory        : "/dogu",
     namespace            : "official",
     gitUser              : "cesmarvin",
