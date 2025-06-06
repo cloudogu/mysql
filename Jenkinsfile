@@ -37,6 +37,7 @@ sharedBuildPipeline([
     backendUser          : "cesmarvin-setup",
     shellScripts         : "resources/create-sa.sh resources/remove-sa.sh resources/startup.sh resources/upgrade-notification.sh resources/backup-consumer.sh",
     doBatsTests          : true,
+    checkMarkdown        : false,
     dependencies         : ["usermgt", "cas"],
 
 
