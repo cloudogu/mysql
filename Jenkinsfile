@@ -1,3 +1,11 @@
+#!groovy
+@Library([
+  'github.com/cloudogu/build-lib-wrapper@develop',
+  'ces-build-lib', // versioning handled by Global Trusted Pipeline Libraries in Jenkins
+  'dogu-build-lib' // versioning handled by Global Trusted Pipeline Libraries in Jenkins
+]) _
+
+
 def postVerifyStage = { ecoSystem ->
     stage('End-to-end tests') {
         try {
