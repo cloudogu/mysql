@@ -3,8 +3,4 @@
 # interprets this as ignored as "wont fix" and causes a detection.
 # See: https://github.com/madler/zlib/pull/843#issuecomment-2130408505
 CVE-2023-45853
-# aom: heap-buffer-overflow on frame size change
-# https://avd.aquasec.com/nvd/cve-2023-6879
-# Video encoding in dogu irrelevant
-CVE-2023-6879
 
