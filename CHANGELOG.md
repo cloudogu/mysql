@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.4.5-3] - 2025-06-06
+### Changed
+- [#38] Integrated Shared Pipeline (Jenkinsfile)
+
+### Security
+- [#38] Fix [CVE-2023-6879](https://nvd.nist.gov/vuln/detail/CVE-2023-6879) 
+- [#38] Fix [CVE-2025-48174](https://nvd.nist.gov/vuln/detail/CVE-2025-48174)
+
 ## [v8.4.5-2] - 2025-05-14
 ### Changed
 - This version contains only technical changes:
