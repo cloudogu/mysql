@@ -16,13 +16,14 @@
       "Name": "data",
       "Path": "/var/lib/mysql/",
       "Owner": "100",
-      "Group": "101"
+      "Group": "101",
+      "NeedsBackup": true
     },
     {
       "Name": "localConfig",
       "Path": "/var/ces/config",
-      "Owner": "1000",
-      "Group": "1000",
+      "Owner": "100",
+      "Group": "101",
       "NeedsBackup": true
     }
   ],
