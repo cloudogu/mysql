@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.4.5-4] - 2025-06-16
+### Fixed
+- [#40] Use uid 100 and gid 101 for the local config volume because 1000 does not exist in the container.
+
 ## [v8.4.5-3] - 2025-06-06
 ### Changed
 - [#38] Integrated Shared Pipeline (Jenkinsfile)
