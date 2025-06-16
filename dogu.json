@@ -16,7 +16,8 @@
       "Name": "data",
       "Path": "/var/lib/mysql/",
       "Owner": "100",
-      "Group": "101"
+      "Group": "101",
+      "NeedsBackup": true
     },
     {
       "Name": "localConfig",
