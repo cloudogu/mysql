@@ -29,6 +29,11 @@ EOF
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
 apt-get update
 
+if ! apt-cache madison mysql-server | grep -q "${MYSQL_VERSION}-1debian12"; then
+  echo "ERROR: MySQL version ${MYSQL_VERSION}-1debian12 not available in APT repo."
+  exit 42
+fi
+
 # This will install mysql with empty root password
 export DEBIAN_FRONTEND=noninteractive
 apt-get -y install "mysql-community-server=${MYSQL_VERSION}-1debian12"
