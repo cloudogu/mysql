@@ -2,10 +2,10 @@ FROM registry.cloudogu.com/official/base-debian:12.9-1
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="official/mysql" \
-        VERSION="8.4.5-4"
+        VERSION="8.4.6-0"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
-    MYSQL_VERSION="8.4.5" \
+    MYSQL_VERSION="8.4.6" \
     MYSQL_VOLUME=/var/lib/mysql \
     MYSQL_MY_CONF_DIR=/etc/my.cnf.d \
     MYSQL_DOGU_CONF_DIR=/etc/my.cnf.dogu.d \
