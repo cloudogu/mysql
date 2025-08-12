@@ -7,7 +7,7 @@ DATABASE_CONFIG_DIR="${STARTUP_DIR}/etc/my.cnf.dogu.d"
 
 function renderConfigFile() {
   echo "Rendering config file..."
-
+  mkdir -p "${DATABASE_CONFIG_DIR}"
   INNODB_BUFFER_POOL_SIZE_IN_BYTES="$(calculateInnoDbBufferPoolSize)"
   export INNODB_BUFFER_POOL_SIZE_IN_BYTES
   echo "Setting innodb_buffer_pool_size to ${INNODB_BUFFER_POOL_SIZE_IN_BYTES} bytes"
