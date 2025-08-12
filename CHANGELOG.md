@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - [#42] Upgrade MySQL to 8.4.6
-- [#42] added pipe-build-lib
+- [#42] Added pipe-build-lib
 
 ## [v8.4.5-4] - 2025-06-16
 ### Fixed
