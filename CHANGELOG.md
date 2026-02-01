@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.4.3-2] - 2026-02-01
+
+### Security
+- CVE fixed: [cve-2025-15467](https://avd.aquasec.com/nvd/2025/cve-2025-15467/)
+
+
 ## [v8.4.3-1] - 2024-11-19
 - Upgrade mysql to 8.4.3 (LTS)
 - Save SQL-Dumpfile for maintenance purposes
