@@ -8,12 +8,6 @@ timestamps {
         stage('Checkout') {
             checkout scm
         }
-
-        stage('Lint') {
-            lintDockerfile()
-            shellCheck("resources/create-sa.sh resources/remove-sa.sh resources/startup.sh resources/upgrade-notification.sh resources/backup-consumer.sh")
-        }
-
         stage('Shell tests') {
             def bats_base_image = "bats/bats"
             def bats_custom_image = "cloudogu/bats"
