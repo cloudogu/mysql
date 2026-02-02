@@ -1,20 +1,40 @@
 #!/bin/bash
-set -euo pipefail
-export DEBIAN_FRONTEND=noninteractive
+set -o errexit
+set -o nounset
+set -o pipefail
 
-apt-get update
-apt-get install -y --no-install-recommends ca-certificates curl gnupg
+MYSQL_VERSION="${1}"
 
-# Install CURRENT MySQL signing key
-install -d /usr/share/keyrings
-curl -fsSL https://repo.mysql.com/RPM-GPG-KEY-mysql-2023 \
-  | gpg --dearmor \
-  > /usr/share/keyrings/mysql.gpg
+# Version of debian file containing the installation files for mysql in different versions
+# This is NOT the actual mysql version to install
+APT_UTIL_VERSION="0.8.34-1"
+APT_UTIL_SHA256="9a7b0d074e7854725de10af2fdfccfba5749fd0f3c2d89b3529ee2e4035cc217"
 
-# Add MySQL 8.4 LTS repo explicitly
-cat >/etc/apt/sources.list.d/mysql.list <<'EOF'
-deb [signed-by=/usr/share/keyrings/mysql.gpg] http://repo.mysql.com/apt/debian bookworm mysql-8.4-lts
+# See for latest version: https://dev.mysql.com/downloads/repo/apt/
+wget "https://dev.mysql.com/get/mysql-apt-config_${APT_UTIL_VERSION}_all.deb"
+echo "${APT_UTIL_SHA256} mysql-apt-config_${APT_UTIL_VERSION}_all.deb" | sha256sum -c -
+
+# Select the correct mysql package
+# 1. '1': Select the option to choose the mysql version
+# 2. '3': Select mysql8.4-lts
+# 3. 'ok': Finish configuration
+dpkg -i "mysql-apt-config_${APT_UTIL_VERSION}_all.deb" <<EOF
+1
+3
+ok
 EOF
 
+# Fetch signing key for package verification
+# https://repo.mysql.com/apt/ubuntu/conf/distributions
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
 apt-get update
-apt-get install -y mysql-community-server
+
+if ! apt-cache madison mysql-server | grep -q "${MYSQL_VERSION}-1debian12"; then
+  echo "ERROR: MySQL version ${MYSQL_VERSION}-1debian12 not available in APT repo."
+  exit 42
+fi
+
+# This will install mysql with empty root password
+export DEBIAN_FRONTEND=noninteractive
+apt-get -y install "mysql-community-server=${MYSQL_VERSION}-1debian12"
+rm -f "mysql-apt-config_${APT_UTIL_VERSION}_all.deb"
