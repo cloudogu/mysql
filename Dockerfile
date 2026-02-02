@@ -5,7 +5,7 @@ LABEL MAINTAINER="hello@cloudogu.com" \
         VERSION="8.4.3-1"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
-    MYSQL_VERSION="8.4.3" \
+    MYSQL_VERSION="8.4" \
     MYSQL_VOLUME=/var/lib/mysql \
     MYSQL_MY_CONF_DIR=/etc/my.cnf.d \
     MYSQL_DOGU_CONF_DIR=/etc/my.cnf.dogu.d \
@@ -16,7 +16,7 @@ ENV PATH="${PATH}:/var/lib/mysql/bin" \
 COPY installation-scripts /
 
 RUN set -eux \
- && apt-get update \
+ && apt-get update --allow-insecure-repositories \
  && apt-get upgrade -y \
  && apt-get install -y libaio1 libaio-dev libnuma-dev libncurses5 procps libc-bin ${DEV_DEPENDENCIES} \
  && /install-mysql.sh "${MYSQL_VERSION}" \
