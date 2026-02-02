@@ -71,6 +71,12 @@ timestamps {
                 ecoSystem.verify(doguDirectory)
             }
 
+            stage('Finish Release') {
+                String releaseVersion = 'v8.4.8-1'
+                ecoSystem.push('/dogu')
+                github.createReleaseWithChangelog(releaseVersion, changelog, "main")
+            }
+
             stage('End-to-end tests') {
                 try {
                     def createOutput = ecoSystem.vagrant.sshOut('sudo cesapp command mysql service-account-create mydogu')
