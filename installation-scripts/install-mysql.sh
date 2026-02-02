@@ -1,41 +1,25 @@
 #!/bin/bash
-set -o errexit
-set -o nounset
-set -o pipefail
-
-DEBIAN_SHA_256_SUM="df9c563abd70bb9b2fb1be7d11868a300bd60023bcd60700f24430008059a704"
-VERSION="0.8.32-1"
+set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-# prerequisites
+# Base deps for repo + key
 apt-get update
-apt-get install -y wget ca-certificates gnupg
+apt-get install -y --no-install-recommends ca-certificates curl gnupg
 
-# install MySQL signing key (CURRENT)
-mkdir -p /usr/share/keyrings
-wget -qO- https://repo.mysql.com/RPM-GPG-KEY-mysql-2023 \
+# Install MySQL repo signing key (current)
+install -d -m 0755 /usr/share/keyrings
+curl -fsSL https://repo.mysql.com/RPM-GPG-KEY-mysql-2023 \
   | gpg --dearmor \
   > /usr/share/keyrings/mysql.gpg
 
-# download mysql repo config
-wget "https://dev.mysql.com/get/mysql-apt-config_${VERSION}_all.deb"
-echo "${DEBIAN_SHA_256_SUM} mysql-apt-config_${VERSION}_all.deb" | sha256sum -c -
-
-# configure mysql repo (mysql 8.4 LTS)
-dpkg -i "mysql-apt-config_${VERSION}_all.deb" <<EOF
-1
-3
-ok
+# Create a clean, valid repo file (Debian 12 = bookworm)
+# NOTE: MySQL uses "mysql-8.4-lts" as component for 8.4 LTS in their APT repo config UI.
+cat >/etc/apt/sources.list.d/mysql.list <<'EOF'
+deb [signed-by=/usr/share/keyrings/mysql.gpg] http://repo.mysql.com/apt/debian bookworm mysql-8.4-lts
 EOF
 
-# ensure repo uses the keyring
-sed -i 's|^deb |deb [signed-by=/usr/share/keyrings/mysql.gpg] |' \
-  /etc/apt/sources.list.d/mysql.list
-
-# update & install
 apt-get update
-apt-get -y install mysql-community-server
 
-# cleanup
-rm -f mysql-apt-config_${VERSION}_all.deb
+# Install server (root password empty behavior depends on packaging; noninteractive avoids prompts)
+apt-get install -y --no-install-recommends mysql-community-server
