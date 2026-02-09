@@ -5,7 +5,7 @@ LABEL MAINTAINER="hello@cloudogu.com" \
         VERSION="8.4.6-1"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
-    MYSQL_VERSION="8.4.6" \
+    MYSQL_VERSION="8.4.8" \
     MYSQL_VOLUME=/var/lib/mysql \
     MYSQL_MY_CONF_DIR=/etc/my.cnf.d \
     MYSQL_DOGU_CONF_DIR=/etc/my.cnf.dogu.d \
