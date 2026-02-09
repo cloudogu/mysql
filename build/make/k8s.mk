@@ -43,7 +43,7 @@ ifeq (${RUNTIME_ENV}, remote)
 	CES_REGISTRY_NAMESPACE=/testing
 	ifeq ($(ENVIRONMENT), ci)
         CES_REGISTRY_NAMESPACE=/ci
-    else
+    endif
 endif
 $(info CES_REGISTRY_HOST=$(CES_REGISTRY_HOST))
 
