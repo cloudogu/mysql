@@ -42,7 +42,7 @@ ifeq (${RUNTIME_ENV}, remote)
 	CES_REGISTRY_HOST=registry.cloudogu.com
 	CES_REGISTRY_NAMESPACE=/testing
 	ifeq ($(ENVIRONMENT), ci)
-            CES_REGISTRY_NAMESPACE=/ci
+        CES_REGISTRY_NAMESPACE=/ci
     else
 endif
 $(info CES_REGISTRY_HOST=$(CES_REGISTRY_HOST))
