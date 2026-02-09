@@ -1,7 +1,8 @@
 ##@ Makefile management
 
 .PHONY: update-makefiles
-update-makefiles: do-update-makefiles ## Update Makefiles to MAKEFILES_VERSION
+update-makefiles:
+	@echo ignore update for now
 
 .PHONY: do-update-makefiles
 do-update-makefiles: $(TMP_DIR) download-and-extract remove-old-files copy-new-files
