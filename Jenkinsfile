@@ -22,6 +22,10 @@ pipe.setBuildProperties()
 pipe.addDefaultStages()
 com.cloudogu.ces.dogubuildlib.EcoSystem ecoSystem = pipe.ecoSystem
 
+pipe.insertStageBefore('MN-Verify', 'Patch Goss-Test for MN') {
+  sh "sed -i 's/btrfs/ext4/g' ./spec/goss/goss.yaml"
+}
+
 pipe.insertStageAfter('Verify', 'End-to-end tests') {
     def script = pipe.script
 
