@@ -20,6 +20,7 @@ include build/make/self-update.mk
 include build/make/release.mk
 include build/make/prerelease.mk
 include build/make/k8s-dogu.mk
+include build/make/trivyscan.mk
 
 .PHONY unit-test-shell:
 unit-test-shell: unit-test-shell-$(ENVIRONMENT)
