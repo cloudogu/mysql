@@ -6,9 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- [#50] Update BaseImage to base-debian:12.9-6
 - [#48] Upgrade MySQL to 8.4.8
 - [#48] Update Makefiles to 10.6.0
-- [#48] Update BaseImage to base-debian:12.9-5
 
 ## [v8.4.6-1] - 2025-08-12
 ### Changed
