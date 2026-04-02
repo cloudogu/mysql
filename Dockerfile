@@ -1,8 +1,8 @@
-FROM registry.cloudogu.com/official/base-debian:12.9-6
+FROM registry.cloudogu.com/official/base-debian:13.3-6
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="official/mysql" \
-        VERSION="8.4.8-2"
+        VERSION="8.4.8-3"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
     MYSQL_VERSION="8.4.8" \
@@ -18,7 +18,7 @@ COPY installation-scripts /
 RUN set -eux \
     && apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y libaio1 libaio-dev libnuma-dev libncurses5 procps libc-bin ${DEV_DEPENDENCIES}
+    && apt-get install -y libaio1t64 libaio-dev libnuma-dev libncurses6 procps libc-bin ${DEV_DEPENDENCIES}
 
 # Install MySQL separately so it fails immediately if version not available
 RUN /install-mysql.sh "${MYSQL_VERSION}"

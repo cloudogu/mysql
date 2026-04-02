@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.4.8-3] - 2026-04-02
+### Changed
+- [#52] Update debian base-image to 13.3-6
+
+### Security
+- [#52] Fix [cve-2026-0861](https://avd.aquasec.com/nvd/2026/cve-2026-0861/)
+
 ## [v8.4.8-2] - 2026-02-17
+### Changed
 - [#50] Update BaseImage to base-debian:12.9-6
 - [#48] Upgrade MySQL to 8.4.8
 - [#48] Update Makefiles to 10.6.0
