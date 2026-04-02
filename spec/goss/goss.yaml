@@ -30,13 +30,13 @@ file:
     owner: mysql
     filetype: directory
 package:
-  libaio1:
+  libaio1t64:
     installed: true
   libaio-dev:
     installed: true
   libnuma-dev:
     installed: true
-  libncurses5:
+  libncurses6:
     installed: true
 port:
   tcp:3306:
