@@ -32,18 +32,18 @@ wget -qO- https://repo.mysql.com/RPM-GPG-KEY-mysql-2025 \
   | gpg --dearmor -o /etc/apt/keyrings/mysql.gpg
 
 tee /etc/apt/sources.list.d/mysql.list >/dev/null <<'EOF'
-deb [signed-by=/etc/apt/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian/ bookworm mysql-8.4-lts
-deb-src [signed-by=/etc/apt/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian/ bookworm mysql-8.4-lts
+deb [signed-by=/etc/apt/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian/ trixie mysql-8.4-lts
+deb-src [signed-by=/etc/apt/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian/ trixie mysql-8.4-lts
 EOF
 
 apt-get update
 
-if ! apt-cache madison mysql-server | grep -q "${MYSQL_VERSION}-1debian12"; then
-  echo "ERROR: MySQL version ${MYSQL_VERSION}-1debian12 not available in APT repo."
+if ! apt-cache madison mysql-server | grep -q "${MYSQL_VERSION}-1debian13"; then
+  echo "ERROR: MySQL version ${MYSQL_VERSION}-1debian13 not available in APT repo."
   exit 42
 fi
 
 # This will install mysql with empty root password
 export DEBIAN_FRONTEND=noninteractive
-apt-get -y install "mysql-community-server=${MYSQL_VERSION}-1debian12"
+apt-get -y install "mysql-community-server=${MYSQL_VERSION}-1debian13"
 rm -f "mysql-apt-config_${APT_UTIL_VERSION}_all.deb"
