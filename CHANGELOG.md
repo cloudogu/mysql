@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v8.4.10-1] - 2026-07-06
 ### Changed
 - [#57] Update mysql to v8.4.10
 - [#57] Update base-debian image to v13.5-3
