@@ -6,11 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- [#57] Update mysql to v8.4.10
+- [#57] Update base-debian image to v13.5-3
 
 ## [v8.4.9-1] - 2026-04-29
 ### Changed
-- [#55] Update base-debian image to 13.4-1
-- [#55] Update mysql to 8.4.9
+- [#55] Update mysql to v8.4.9
+- [#55] Update base-debian image to v13.4-1
 
 ### Security
 - [#55] Fix [CVE-2026-31789](https://nvd.nist.gov/vuln/detail/CVE-2026-31789)
