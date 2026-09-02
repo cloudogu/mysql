@@ -9,9 +9,8 @@
 The MySQL-Dogu is configured via the registry.
 There are several ways to configure values in the registry.
 In short you can:
-1. configure a dogu with `cesapp edit-config <dogu>` (recommended)
+1. configure a dogu with `kubectl edit configmap mysql-config` (recommended)
 2. update the configuration values using a blueprint
-3. manually adjust the keys with `etcdctl`
 
 ## Configuration
 

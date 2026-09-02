@@ -9,13 +9,11 @@
 Das MySQL-Dogu wird über die Registry konfiguriert.
 Es gibt mehrere Möglichkeiten, um Werte in der Registry zu konfigurieren.
 Kurzgefasst kann man:
-1. Ein Dogu mit `cesapp edit-config <dogu>` konfigurieren (empfohlen)
+1. Ein Dogu mit `kubectl edit configmap mysql-config` konfigurieren (empfohlen)
 2. Die Konfigurationswerte mithilfe eines Blueprint aktualisieren
-3. Die Schlüssel mit `etcdctl` manuell anpassen
 
 ## Konfiguration
 
-Alle Konfigurationsschlüssel für die Einstellungen von MySQL haben das Schlüsselpräfix `/config/mysql/`.
 MySQL bietet die folgenden Einstellungen:
 
 #### Logging-Verhalten
