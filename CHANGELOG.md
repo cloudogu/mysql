@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v8.4.13-1] - 2026-11-04
+### Changed
+- [#62] Update MySQL to v8.4.13
+- [#62] Update base image to v13.7-4
+- [#62] Bump mysql-apt-config to v0.8.36-1
+
 ## [v8.4.11-2] - 2026-09-18
 ### Changed
 - [#63] Update base image to v13.6-5
