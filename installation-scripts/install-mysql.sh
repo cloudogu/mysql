@@ -14,15 +14,9 @@ APT_UTIL_SHA256="4d7db2369b1430152eb46cfa35e2576ea32fdbbb6501cbab8261654b8fbb623
 wget "https://dev.mysql.com/get/mysql-apt-config_${APT_UTIL_VERSION}_all.deb"
 echo "${APT_UTIL_SHA256} mysql-apt-config_${APT_UTIL_VERSION}_all.deb" | sha256sum -c -
 
-# Select the correct mysql package
-# 1. '1': Select the option to choose the mysql version
-# 2. '3': Select mysql8.4-lts
-# 3. 'ok': Finish configuration
-dpkg -i "mysql-apt-config_${APT_UTIL_VERSION}_all.deb" <<EOF
-1
-3
-ok
-EOF
+# Install the apt config package non-interactively and preselect mysql-8.4-lts.
+DEBIAN_FRONTEND=noninteractive MYSQL_SERVER_VERSION="mysql-8.4-lts" \
+  dpkg -i "mysql-apt-config_${APT_UTIL_VERSION}_all.deb"
 
 # --- Non-deprecated key setup: /etc/apt/keyrings + signed-by ---
 install -d -m 0755 /etc/apt/keyrings
