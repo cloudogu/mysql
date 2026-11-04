@@ -7,8 +7,8 @@ MYSQL_VERSION="${1}"
 
 # Version of debian file containing the installation files for mysql in different versions
 # This is NOT the actual mysql version to install
-APT_UTIL_VERSION="0.8.34-1"
-APT_UTIL_SHA256="9a7b0d074e7854725de10af2fdfccfba5749fd0f3c2d89b3529ee2e4035cc217"
+APT_UTIL_VERSION="0.8.36-1"
+APT_UTIL_SHA256="4d7db2369b1430152eb46cfa35e2576ea32fdbbb6501cbab8261654b8fbb6234"
 
 # See for latest version: https://dev.mysql.com/downloads/repo/apt/
 wget "https://dev.mysql.com/get/mysql-apt-config_${APT_UTIL_VERSION}_all.deb"
