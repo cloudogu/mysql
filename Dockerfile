@@ -2,7 +2,7 @@ FROM registry.cloudogu.com/official/base-debian:13.7-4
 
 LABEL MAINTAINER="hello@cloudogu.com" \
         NAME="official/mysql" \
-        VERSION="8.4.13-0"
+        VERSION="8.4.13-1"
 
 ENV PATH="${PATH}:/var/lib/mysql/bin" \
     MYSQL_VERSION="8.4.13" \
