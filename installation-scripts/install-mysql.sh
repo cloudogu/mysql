@@ -4,6 +4,8 @@ set -o nounset
 set -o pipefail
 
 MYSQL_VERSION="${1}"
+# MySQL apt repo component of the LTS series MYSQL_VERSION belongs to, e.g. 1.2.3 -> mysql-1.2-lts
+MYSQL_APT_COMPONENT="mysql-${MYSQL_VERSION%.*}-lts"
 
 # Version of debian file containing the installation files for mysql in different versions
 # This is NOT the actual mysql version to install
@@ -14,8 +16,8 @@ APT_UTIL_SHA256="4d7db2369b1430152eb46cfa35e2576ea32fdbbb6501cbab8261654b8fbb623
 wget "https://dev.mysql.com/get/mysql-apt-config_${APT_UTIL_VERSION}_all.deb"
 echo "${APT_UTIL_SHA256} mysql-apt-config_${APT_UTIL_VERSION}_all.deb" | sha256sum -c -
 
-# Install the apt config package non-interactively and preselect mysql-8.4-lts.
-DEBIAN_FRONTEND=noninteractive MYSQL_SERVER_VERSION="mysql-8.4-lts" \
+# Install the apt config package non-interactively and preselect the MySQL LTS series.
+DEBIAN_FRONTEND=noninteractive MYSQL_SERVER_VERSION="${MYSQL_APT_COMPONENT}" \
   dpkg -i "mysql-apt-config_${APT_UTIL_VERSION}_all.deb"
 
 # --- Non-deprecated key setup: /etc/apt/keyrings + signed-by ---
@@ -25,9 +27,9 @@ install -d -m 0755 /etc/apt/keyrings
 wget -qO- https://repo.mysql.com/RPM-GPG-KEY-mysql-2025 \
   | gpg --dearmor -o /etc/apt/keyrings/mysql.gpg
 
-tee /etc/apt/sources.list.d/mysql.list >/dev/null <<'EOF'
-deb [signed-by=/etc/apt/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian/ trixie mysql-8.4-lts
-deb-src [signed-by=/etc/apt/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian/ trixie mysql-8.4-lts
+tee /etc/apt/sources.list.d/mysql.list >/dev/null <<EOF
+deb [signed-by=/etc/apt/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian/ trixie ${MYSQL_APT_COMPONENT}
+deb-src [signed-by=/etc/apt/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian/ trixie ${MYSQL_APT_COMPONENT}
 EOF
 
 apt-get update
