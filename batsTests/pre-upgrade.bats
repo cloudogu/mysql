@@ -12,7 +12,9 @@ load '/workspace/target/bats_libs/bats-file/load.bash'
 
 setup() {
   export STARTUP_DIR=/workspace/resources
-  export WORKDIR=/workspace
+  export MYSQL_VOLUME="${BATS_TEST_TMPDIR}/data"
+  mkdir -p "${MYSQL_VOLUME}"
+  mountpoint() { [[ "${2}" == "${MYSQL_VOLUME}" ]]; }
   doguctl="$(mock_create)"
   export bundle
   export PATH="${PATH}:${BATS_TMPDIR}"
@@ -21,7 +23,7 @@ setup() {
 
 teardown() {
   unset STARTUP_DIR
-  unset WORKDIR
+  unset MYSQL_VOLUME
   rm "${BATS_TMPDIR}/doguctl"
 }
 
@@ -48,6 +50,7 @@ teardown() {
   assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'config local_state upgrading'
   assert_failure
   assert_equal "${status}" 123
+  assert_file_not_exist "${MYSQL_VOLUME}/.mysql-upgrade/alldb.sql"
 }
 
 @test "versionXLessOrEqualThanY() should return true for versions less than or equal to another" {

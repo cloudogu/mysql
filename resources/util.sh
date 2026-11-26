@@ -127,15 +127,19 @@ function startMysql() {
 }
 
 function startMysqlInBackground() {
+  local socket="${1}"
   echo "Starting mysql in background..."
-  echo "${MYSQL_VOLUME}"
-  runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}" &
+  runuser -u mysql -- mysqld --datadir="${MYSQL_VOLUME}" --socket="${socket}" --skip-networking --mysqlx=OFF &
+  local pid=$!
 
-  while [[ "$(mysql -e "show databases;" &> /dev/null; echo $?)" == "1" ]]; do
+  while ! mysql --protocol=socket --socket="${socket}" -e "show databases;" &> /dev/null; do
+    if ! kill -0 "${pid}" 2>/dev/null; then
+      echo "ERROR: MySQL restore server stopped before it was ready" >&2
+      return 1
+    fi
     echo "Waiting for mysql to start..."
     sleep 3
   done
-  sleep 20
 }
 
 function removeSocketIfExists(){

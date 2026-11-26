@@ -15,7 +15,20 @@ function run_preupgrade() {
   echo "Set registry flag so startup script waits for post-upgrade to finish..."
   doguctl config "local_state" "upgrading"
 
-  dumpData "${FROM_VERSION}" "${TO_VERSION}"
+  # Older Dogu versions only mount the data volume. Leave the original data
+  # intact until post-upgrade has copied the dump out of the data directory.
+  local data_volume="${MYSQL_VOLUME:-/var/lib/mysql}"
+  if ! mountpoint -q "${data_volume}"; then
+    echo "ERROR: MySQL data volume ${data_volume} is not mounted" >&2
+    return 1
+  fi
+  local dump_dir="${data_volume}/.mysql-upgrade"
+  install -d -m 700 "${dump_dir}"
+  local dump_file
+  dump_file="$(mktemp "${dump_dir}/alldb.partial.XXXXXX")"
+  dumpData "${FROM_VERSION}" "${TO_VERSION}" "${dump_file}"
+  mv "${dump_file}" "${dump_dir}/alldb.sql"
+  sync -f "${dump_dir}"
 
   echo "Mysql pre-upgrade done"
 }
@@ -23,15 +36,18 @@ function run_preupgrade() {
 function dumpData(){
     FROM_VERSION="${1}"
     TO_VERSION="${2}"
+    local dump_file="${3}"
 
     TABLES="$(mysql -e "SELECT group_concat(schema_name) FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema','performance_schema', 'sys');" | tail -n +2 | sed 's/,/ /g')"
     if [[ "${TABLES}" == "NULL" ]]; then
       echo "TABLES are NULL. No available Data to DUMP."
-      rm -rf /var/lib/mysql/*
-      doguctl config --rm first_start_done
     else
       # shellcheck disable=SC2086 # Word splitting is intentional here
-      mysqldump -u root --flush-privileges --opt --databases ${TABLES} > /alldb.sql
+      mysqldump -u root --flush-privileges --opt --databases ${TABLES} > "${dump_file}"
+      if [[ ! -s "${dump_file}" ]]; then
+        echo "ERROR: MySQL returned an empty dump for existing schemas" >&2
+        return 1
+      fi
 
       local DEPRECATED_PLUGIN
       DEPRECATED_PLUGIN="$(mysql -uroot mysql -e "select count(*) FROM user WHERE plugin LIKE 'mysql_native_password';" | tail -n +2)"
@@ -59,11 +75,11 @@ function dumpData(){
         local user
         for user in ${USERS}
         do
-            echo "DROP user IF EXISTS '${user}';" >> /alldb.sql
+            echo "DROP user IF EXISTS '${user}';" >> "${dump_file}"
         done
 
         # flush privileges just once instead of once per user
-        echo "flush privileges;" >> /alldb.sql
+        echo "flush privileges;" >> "${dump_file}"
 
         FROM_MAJOR_VERSION=$(echo "${FROM_VERSION}" | cut -d '.' -f1)
 
@@ -77,10 +93,10 @@ function dumpData(){
               PRINT_HEX="SET @@SESSION.print_identified_with_as_hex = 1; "
             fi
             CREATE="$(mysql --skip-column-names -A mysql -e "${PRINT_HEX}SHOW CREATE USER '${user}'")"
-            echo "${CREATE};" >> /alldb.sql
+            echo "${CREATE};" >> "${dump_file}"
         done
 
-        echo "flush privileges;" >> /alldb.sql
+        echo "flush privileges;" >> "${dump_file}"
 
         local GRANT
         GRANT="$(mysql --skip-column-names -A -e"SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') FROM mysql.user WHERE user<>''" | mysql --skip-column-names -A | sed 's/$/;/g')"
@@ -90,12 +106,8 @@ function dumpData(){
         # https://dev.mysql.com/doc/refman/8.4/en/mysql-nutshell.html
         GRANT=$(echo "${GRANT}" |  sed 's/SET_USER_ID,/SET_ANY_DEFINER,ALLOW_NONEXISTENT_DEFINER,/g')
 
-        echo "${GRANT};" >> /alldb.sql
+        echo "${GRANT};" >> "${dump_file}"
       fi
-
-      rm -rf /var/lib/mysql/*
-      doguctl config --rm first_start_done
-      mv /alldb.sql /var/lib/mysql/alldb.sql
     fi
 }
 
@@ -168,4 +180,3 @@ function versionXLessThanY() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   run_preupgrade "$@"
 fi
-
