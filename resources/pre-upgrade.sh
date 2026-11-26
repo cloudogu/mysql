@@ -12,9 +12,6 @@ function run_preupgrade() {
     exit 0
   fi
 
-  echo "Set registry flag so startup script waits for post-upgrade to finish..."
-  doguctl config "local_state" "upgrading"
-
   # Older Dogu versions only mount the data volume. Leave the original data
   # intact until post-upgrade has copied the dump out of the data directory.
   local data_volume="${MYSQL_VOLUME:-/var/lib/mysql}"
@@ -24,11 +21,15 @@ function run_preupgrade() {
   fi
   local dump_dir="${data_volume}/.mysql-upgrade"
   install -d -m 700 "${dump_dir}"
-  local dump_file
-  dump_file="$(mktemp "${dump_dir}/alldb.partial.XXXXXX")"
-  dumpData "${FROM_VERSION}" "${TO_VERSION}" "${dump_file}"
-  mv "${dump_file}" "${dump_dir}/alldb.sql"
-  sync -f "${dump_dir}"
+  local attempt_dir
+  attempt_dir="$(mktemp -d "${dump_dir}/XXXXXXXXXXXX")"
+  # Publish the expected identity first, but only publish the SQL file after a successful dump.
+  doguctl config upgrade_dump_id "${attempt_dir##*/}"
+  doguctl config local_state upgrading
+  install -m 600 /dev/null "${attempt_dir}/alldb.partial"
+  dumpData "${FROM_VERSION}" "${TO_VERSION}" "${attempt_dir}/alldb.partial"
+  mv "${attempt_dir}/alldb.partial" "${attempt_dir}/alldb.sql"
+  sync -f "${attempt_dir}"
 
   echo "Mysql pre-upgrade done"
 }

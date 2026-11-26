@@ -12,19 +12,17 @@ load '/workspace/target/bats_libs/bats-file/load.bash'
 
 setup() {
   export STARTUP_DIR=/workspace/resources
-  export MYSQL_VOLUME="${BATS_TEST_TMPDIR}/data"
-  mkdir -p "${MYSQL_VOLUME}"
+  MYSQL_VOLUME="$(mktemp -d "${BATS_TMPDIR}/mysql-data.XXXXXXXX")"
+  export MYSQL_VOLUME
   mountpoint() { [[ "${2}" == "${MYSQL_VOLUME}" ]]; }
   doguctl="$(mock_create)"
   export bundle
-  export PATH="${PATH}:${BATS_TMPDIR}"
-  ln -s "${doguctl}" "${BATS_TMPDIR}/doguctl"
+  export PATH="${MYSQL_VOLUME}:${PATH}"
+  ln -s "${doguctl}" "${MYSQL_VOLUME}/doguctl"
 }
 
 teardown() {
-  unset STARTUP_DIR
-  unset MYSQL_VOLUME
-  rm "${BATS_TMPDIR}/doguctl"
+  rm -rf -- "${MYSQL_VOLUME:?}"
 }
 
 @test "versions are the same - no script executed" {
@@ -41,16 +39,15 @@ teardown() {
   source "${STARTUP_DIR}/pre-upgrade.sh"
 
   dumpData() {
+      echo 'partial export' > "$3"
       exit 123
   }
 
   run run_preupgrade "5.7.37-1" "8.0.32-1"
 
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'config local_state upgrading'
   assert_failure
   assert_equal "${status}" 123
-  assert_file_not_exist "${MYSQL_VOLUME}/.mysql-upgrade/alldb.sql"
+  assert_equal "$(find "${MYSQL_VOLUME}" -name alldb.sql)" ''
 }
 
 @test "versionXLessOrEqualThanY() should return true for versions less than or equal to another" {

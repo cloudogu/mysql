@@ -13,10 +13,6 @@ function run_postupgrade() {
   fi
 
   local config_volume="${WORKDIR:-}/var/ces/config"
-  local dump_dir="${config_volume}/mysql-upgrade"
-  local dump_file="${dump_dir}/alldb.sql"
-  local staged_dump="${MYSQL_VOLUME}/.mysql-upgrade/alldb.sql"
-
   if ! mountpoint -q "${config_volume}"; then
     echo "ERROR: Upgrade dump volume ${config_volume} is not mounted" >&2
     return 1
@@ -25,34 +21,64 @@ function run_postupgrade() {
     echo "ERROR: MySQL data volume ${MYSQL_VOLUME} is not mounted" >&2
     return 1
   fi
-  local state
+
+  local staging_dir="${MYSQL_VOLUME}/.mysql-upgrade"
+  local recovery_dir="${config_volume}/mysql-upgrade"
+  local state dump_id
   state="$(doguctl config local_state -d empty)"
+  dump_id="$(doguctl config upgrade_dump_id -d none)"
+  if [[ "${dump_id}" == none && "${state}" != upgrading && ! -d "${staging_dir}" && ! -d "${recovery_dir}" ]]; then
+    return 0
+  fi
+  if [[ ! "${dump_id}" =~ ^[a-zA-Z0-9]{12}$ ]]; then
+    echo "ERROR: Missing or invalid upgrade dump ID; refusing to restore" >&2
+    return 1
+  fi
+
+  # A retry may use only this export's files, even for the same version pair.
+  local dump_dir="${recovery_dir}/${dump_id}"
+  local staged_dump="${staging_dir}/${dump_id}/alldb.sql"
+  local dump_file="${dump_dir}/alldb.sql"
+  if [[ -d "${staging_dir}" && ! -f "${staged_dump}" ]]; then
+    echo "ERROR: Data volume has no completed export for upgrade ${dump_id}" >&2
+    return 1
+  fi
+  if [[ -d "${recovery_dir}" ]]; then
+    local other_attempt
+    other_attempt="$(find "${recovery_dir}" -mindepth 1 -maxdepth 1 ! -name "${dump_id}" -print -quit)"
+    if [[ -n "${other_attempt}" ]]; then
+      echo "ERROR: Unrelated recovery files in ${recovery_dir}; refusing to restore" >&2
+      return 1
+    fi
+  fi
 
   if [[ -f "${dump_dir}/imported.sql" ]]; then
     # The import has finished; only the final status or cleanup may be pending.
+    if [[ -f "${staged_dump}" || -f "${dump_file}" ]]; then
+      echo "ERROR: Found both a completed and a pending restore; refusing to finish upgrade" >&2
+      return 1
+    fi
     if [[ -d "${dump_dir}/restoring" ]]; then
       rmdir "${dump_dir}/restoring"
     fi
   elif [[ "${state}" != "upgrading" ]]; then
-    if [[ -f "${dump_file}" || -f "${staged_dump}" ]]; then
+    if [[ -d "${staging_dir}" || -f "${dump_file}" || -d "${dump_dir}/restoring" ]]; then
       echo "ERROR: Pending upgrade dump without upgrade state; refusing to restore" >&2
       return 1
     fi
-    return 0
   else
-    install -d -m 700 "${dump_dir}"
+    install -d -m 700 "${recovery_dir}" "${dump_dir}"
     if ! mkdir "${dump_dir}/restoring"; then
       echo "ERROR: Previous restore did not stop cleanly; inspect ${dump_dir} before retrying" >&2
       return 1
     fi
-    if [[ ! -f "${dump_file}" ]]; then
-      if [[ ! -f "${staged_dump}" ]]; then
-        rmdir "${dump_dir}/restoring"
-        echo "ERROR: Expected upgrade dump is missing; refusing to initialize MySQL" >&2
-        return 1
-      fi
+    if [[ -f "${staged_dump}" ]]; then
       cp "${staged_dump}" "${dump_dir}/alldb.partial"
       mv "${dump_dir}/alldb.partial" "${dump_file}"
+    elif [[ ! -f "${dump_file}" ]]; then
+      rmdir "${dump_dir}/restoring"
+      echo "ERROR: Expected upgrade dump is missing; refusing to initialize MySQL" >&2
+      return 1
     fi
     sync -f "${dump_dir}"
 
@@ -74,7 +100,15 @@ function run_postupgrade() {
     doguctl state "upgrade done"
     doguctl config --rm "local_state"
   fi
-  rm "${dump_dir}/imported.sql"
+  # Cleanup may itself be retried after releasing startup.
+  rm -f "${dump_dir}/imported.sql"
+  if [[ -d "${dump_dir}" ]]; then
+    rmdir "${dump_dir}"
+  fi
+  if [[ -d "${recovery_dir}" ]]; then
+    rmdir "${recovery_dir}"
+  fi
+  doguctl config --rm upgrade_dump_id
 
   echo "Mysql post-upgrade done"
 }
