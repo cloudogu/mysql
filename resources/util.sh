@@ -15,49 +15,28 @@ function renderConfigFile() {
   doguctl template "${STARTUP_DIR}/default-config.cnf.tpl" "${DATABASE_CONFIG_DIR}/default-config.cnf"
 }
 
+# cgroup files holding the container memory limit (v2, fallback v1); can be overridden in tests
+CGROUP_V2_MEMORY_LIMIT_FILE="${CGROUP_V2_MEMORY_LIMIT_FILE:-/sys/fs/cgroup/memory.max}"
+CGROUP_V1_MEMORY_LIMIT_FILE="${CGROUP_V1_MEMORY_LIMIT_FILE:-/sys/fs/cgroup/memory/memory.limit_in_bytes}"
+
 function calculateInnoDbBufferPoolSize() {
   defaultInnoDbBufferPool512M="512M"
-  memoryLimitFromEtcd=$(doguctl config "container_config/memory_limit" -d "empty")
-  if [[ "${memoryLimitFromEtcd}" == "empty" ]]; then
-      echo "${defaultInnoDbBufferPool512M}"
-      return
-  fi
+  memoryLimitInBytes=$(cat "${CGROUP_V2_MEMORY_LIMIT_FILE}" 2>/dev/null || cat "${CGROUP_V1_MEMORY_LIMIT_FILE}" 2>/dev/null || true)
 
-  local memoryLimitExitCode=0
-  memoryLimitInBytes=$(cat < "${CONTAINER_MEMORY_LIMIT_FILE}" | tr -d '\n') || memoryLimitExitCode=$?
-  if [[ memoryLimitExitCode -ne 0 ]]; then
-    logError "Error while receiving container memory limit: Exit code: ${memoryLimitExitCode}. Falling back to ${defaultInnoDbBufferPool512M} MB."
-
+  # no limit: no cgroup file, "max" (cgroup v2) or ~8 EiB (cgroup v1)
+  if ! [[ ${memoryLimitInBytes} =~ ^[0-9]+$ ]] || [[ ${memoryLimitInBytes} -gt 549755813888 ]]; then
     echo "${defaultInnoDbBufferPool512M}"
     return
   fi
 
-  if ! [[ ${memoryLimitInBytes} =~ ^[0-9]+$ ]] ; then
-    logError "Memory limit file does not contain a number (found: ${memoryLimitInBytes}). Falling back to ${defaultInnoDbBufferPool512M} MB."
+  # largest power of two that is at most half of the limit (at least 128 MiB);
+  # powers of two are whole multiples of MySQL's chunk size, so MySQL does not round them up
+  bufferPoolSize=$((128 * 1048576))
+  while [[ $((bufferPoolSize * 4)) -le ${memoryLimitInBytes} ]]; do
+    bufferPoolSize=$((bufferPoolSize * 2))
+  done
 
-    echo "${defaultInnoDbBufferPool512M}"
-    return
-  fi
-
-  if [[ ${memoryLimitInBytes} -lt 536870912 ]]; then
-    echo "${defaultInnoDbBufferPool512M}"
-    return
-  fi
-
-  if [[ ${memoryLimitInBytes} -gt 549755813888 ]]; then
-    logError "Detected a memory limit of > 512 GB! Was 'memory_limit' set without re-creating the container?"
-  fi
-
-  innoDbBufferPool80percent=$(echo "${memoryLimitInBytes} * 80 / 100" | bc) || memoryLimitExitCode=$?
-  if [[ memoryLimitExitCode -ne 0 ]]; then
-    logError "Error while calculating memory limit: Exit code: ${memoryLimitExitCode}. Falling back to ${defaultInnoDbBufferPool512M} MB."
-
-    echo "${defaultInnoDbBufferPool512M}"
-    return
-  fi
-
-  echo "${innoDbBufferPool80percent}"
-  return
+  echo "${bufferPoolSize}"
 }
 
 function applySecurityConfiguration() {

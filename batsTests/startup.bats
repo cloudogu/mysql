@@ -13,6 +13,10 @@ setup() {
   export STARTUP_DIR=/workspace/resources
   export WORKDIR=/workspace
   export MYSQL_VOLUME=/workspace/var/lib/mysql
+  # never read the cgroup of the test container; tests write the limit files they need
+  CGROUP_TEST_DIR="$(mktemp -d)"
+  export CGROUP_V2_MEMORY_LIMIT_FILE="${CGROUP_TEST_DIR}/memory.max"
+  export CGROUP_V1_MEMORY_LIMIT_FILE="${CGROUP_TEST_DIR}/memory.limit_in_bytes"
   doguctl="$(mock_create)"
   mysql_install_db="$(mock_create)"
   mysqld="$(mock_create)"
@@ -30,6 +34,7 @@ setup() {
 teardown() {
   unset STARTUP_DIR
   unset WORKDIR
+  rm -rf "${CGROUP_TEST_DIR}"
   rm "${BATS_TMPDIR}/mysql_install_db"
   rm "${BATS_TMPDIR}/doguctl"
   rm "${BATS_TMPDIR}/mysqld"
@@ -43,7 +48,7 @@ teardown() {
 
   mock_set_status "${mysqld}" 0
   mock_set_status "${doguctl}" 0
-  mock_set_output "${doguctl}" "NO" 4
+  mock_set_output "${doguctl}" "NO" 3
   mock_set_status "${runuser}" 0
 
 
@@ -57,16 +62,15 @@ teardown() {
   assert_equal "$(mock_get_call_num "${mysqld}")" "1"
   assert_equal "$(mock_get_call_args "${runuser}" "1")" "-u mysql -- mysqld --datadir=/workspace/var/lib/mysql --log_error_verbosity=2"
   assert_equal "$(mock_get_call_num "${runuser}")" "1"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
-  assert_equal "$(mock_get_call_args "${doguctl}" "2")" "template /workspace/resources/default-config.cnf.tpl /workspace/resources/etc/my.cnf.dogu.d/default-config.cnf"
-  assert_equal "$(mock_get_call_args "${doguctl}" "3")" "config local_state -d empty"
-  assert_equal "$(mock_get_call_args "${doguctl}" "4")" "config first_start_done --default NO"
-  assert_equal "$(mock_get_call_args "${doguctl}" "5")" "config first_start_done YES"
-  assert_equal "$(mock_get_call_args "${doguctl}" "6")" "config --default WARN logging/root"
-  assert_equal "$(mock_get_call_args "${doguctl}" "7")" "state ready"
-  assert_equal "$(mock_get_call_args "${doguctl}" "8")" "config local_state -d empty"
-  assert_equal "$(mock_get_call_args "${doguctl}" "9")" "config --rm local_state"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "9"
+  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "template /workspace/resources/default-config.cnf.tpl /workspace/resources/etc/my.cnf.dogu.d/default-config.cnf"
+  assert_equal "$(mock_get_call_args "${doguctl}" "2")" "config local_state -d empty"
+  assert_equal "$(mock_get_call_args "${doguctl}" "3")" "config first_start_done --default NO"
+  assert_equal "$(mock_get_call_args "${doguctl}" "4")" "config first_start_done YES"
+  assert_equal "$(mock_get_call_args "${doguctl}" "5")" "config --default WARN logging/root"
+  assert_equal "$(mock_get_call_args "${doguctl}" "6")" "state ready"
+  assert_equal "$(mock_get_call_args "${doguctl}" "7")" "config local_state -d empty"
+  assert_equal "$(mock_get_call_args "${doguctl}" "8")" "config --rm local_state"
+  assert_equal "$(mock_get_call_num "${doguctl}")" "8"
 }
 
 @test "applySecurityConfiguration" {
@@ -88,55 +92,6 @@ teardown() {
 
   assert_equal "$(mock_get_call_num "${doguctl}")" "1"
   assert_equal "$(mock_get_call_num "${mysql}")" "5"
-}
-
-@test "calculateInnoDbBufferPoolSize() should return 512 MB (in bytes) if no RAM limit was set" {
-  mock_set_status "${doguctl}" 0
-  mock_set_output "${doguctl}" "empty" 1
-  # shellcheck source=/workspace/resources/startup.sh
-  source "${STARTUP_DIR}/startup.sh"
-
-  run calculateInnoDbBufferPoolSize
-
-  assert_success
-  assert_line "512M"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
-}
-
-@test "calculateInnoDbBufferPoolSize() should return 512 MB (in bytes) if RAM limit was set but is less than 512 MB" {
-  mock_set_status "${doguctl}" 0
-  mock_set_output "${doguctl}" "100m" 1
-  # shellcheck source=/workspace/resources/startup.sh
-  source "${STARTUP_DIR}/startup.sh"
-  testMemoryFile="$(mktemp)"
-  echo 100000000 > "${testMemoryFile}" # 100 MB
-  export CONTAINER_MEMORY_LIMIT_FILE="${testMemoryFile}"
-
-  run calculateInnoDbBufferPoolSize
-
-  assert_success
-  assert_line "512M"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
-}
-
-@test "calculateInnoDbBufferPoolSize() should return 819 MB (in bytes, 80 %) if RAM limit was set to 1 GB" {
-  mock_set_status "${doguctl}" 0
-  mock_set_output "${doguctl}" "1g" 1
-
-  # shellcheck source=/workspace/resources/startup.sh
-  source "${STARTUP_DIR}/startup.sh"
-  testMemoryFile="$(mktemp)"
-  echo 1073741824 > "${testMemoryFile}" # 1024 MB
-  export CONTAINER_MEMORY_LIMIT_FILE="${testMemoryFile}"
-
-  run calculateInnoDbBufferPoolSize
-
-  assert_success
-  assert_line "858993459"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
 }
 
 @test "removeSocketIfExists should remove socket file" {
@@ -181,20 +136,68 @@ teardown() {
   rmdir "${STARTUP_DIR}/var"
 }
 
-@test "calculateInnoDbBufferPoolSize() should log error line when memory_limit was detected" {
-  mock_set_status "${doguctl}" 0
-  mock_set_output "${doguctl}" "1g" 1
-
+@test "regression #68: limit of 800 MiB is detected without CONTAINER_MEMORY_LIMIT_FILE" {
+  # Situation from https://github.com/cloudogu/mysql/issues/68: the container has a cgroup v2 limit of 800 MiB, CONTAINER_MEMORY_LIMIT_FILE is not set.
+  # Before the fix: "CONTAINER_MEMORY_LIMIT_FILE: unbound variable" and a fixed fallback to 512M.
+  unset CONTAINER_MEMORY_LIMIT_FILE
+  echo 838860800 > "${CGROUP_V2_MEMORY_LIMIT_FILE}" # 800 MiB
   # shellcheck source=/workspace/resources/startup.sh
   source "${STARTUP_DIR}/startup.sh"
-  testMemoryFile="$(mktemp)"
-  echo 7378697629510664192 > "${testMemoryFile}" # Something PB
-  export CONTAINER_MEMORY_LIMIT_FILE="${testMemoryFile}"
 
   run calculateInnoDbBufferPoolSize
 
-  assert_success # note: We do not fall back to a fixed value in order have the container crash so the admin needs to look at it
-  assert_line "ERROR: Detected a memory limit of > 512 GB! Was 'memory_limit' set without re-creating the container?"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" "config container_config/memory_limit -d empty"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
+  assert_success
+  refute_output --partial "unbound variable"
+  refute_output --partial "ERROR"
+  refute_output "512M"
+  assert_output "268435456" # 256 MiB: largest power of two <= 400 MiB
+}
+
+@test "calculateInnoDbBufferPoolSize() should return 512M if the container has no memory limit" {
+  echo "max" > "${CGROUP_V2_MEMORY_LIMIT_FILE}"
+  # shellcheck source=/workspace/resources/startup.sh
+  source "${STARTUP_DIR}/startup.sh"
+
+  run calculateInnoDbBufferPoolSize
+
+  assert_success
+  assert_output "512M"
+}
+
+@test "calculateInnoDbBufferPoolSize() should return 512M if cgroup v1 reports no memory limit" {
+  echo 9223372036854771712 > "${CGROUP_V1_MEMORY_LIMIT_FILE}"
+  # shellcheck source=/workspace/resources/startup.sh
+  source "${STARTUP_DIR}/startup.sh"
+
+  run calculateInnoDbBufferPoolSize
+
+  assert_success
+  assert_output "512M"
+}
+
+@test "calculateInnoDbBufferPoolSize() should read the limit from cgroup v1 if cgroup v2 is not available" {
+  echo 1073741824 > "${CGROUP_V1_MEMORY_LIMIT_FILE}" # 1 GiB
+  # shellcheck source=/workspace/resources/startup.sh
+  source "${STARTUP_DIR}/startup.sh"
+
+  run calculateInnoDbBufferPoolSize
+
+  assert_success
+  assert_output "536870912" # 512 MiB: exactly half
+}
+
+@test "calculateInnoDbBufferPoolSize() should use the largest power of two that is at most half of the limit" {
+  # shellcheck source=/workspace/resources/startup.sh
+  source "${STARTUP_DIR}/startup.sh"
+  local mib=1048576
+  # limit in MiB -> expected buffer pool in MiB
+  local cases=("300 128" "512 256" "600 256" "1023 256" "2047 512" "2048 1024" "4096 2048" "8192 4096")
+
+  for c in "${cases[@]}"; do
+    read -r limit expected <<<"${c}"
+    echo $((limit * mib)) > "${CGROUP_V2_MEMORY_LIMIT_FILE}"
+    run calculateInnoDbBufferPoolSize
+    assert_success
+    assert_output "$((expected * mib))"
+  done
 }
