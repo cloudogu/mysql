@@ -79,8 +79,12 @@ function run_postupgrade() {
       return 1
     fi
 
-    # MySQL needs an empty data directory, including when retrying a failed import.
-    find "${MYSQL_VOLUME}" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+    # MySQL initialization ignores dotfiles. Remove only the ones created by the upgrade.
+    local options="${MYSQL_VOLUME}/.my.cnf"
+    if [[ ! -L "${options}" && "${options}" -ef "${staging_dir}/source-read-only.cnf" ]]; then
+      rm -- "${options}"
+    fi
+    find "${MYSQL_VOLUME}" -mindepth 1 -maxdepth 1 \( ! -name '.*' -o -name '.mysql-upgrade' \) -exec rm -rf -- {} +
     doguctl config --rm first_start_done
 
     if [[ -s "${dump_file}" ]]; then
@@ -105,6 +109,8 @@ function run_postupgrade() {
   if [[ -d "${recovery_dir}" ]]; then
     rmdir "${recovery_dir}"
   fi
+  # A crash must not bring back recovery files after the registry forgets their ID.
+  sync -f "${config_volume}"
   doguctl config --rm upgrade_dump_id
 
   echo "Mysql post-upgrade done"

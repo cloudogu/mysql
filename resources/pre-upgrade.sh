@@ -29,7 +29,23 @@ function run_preupgrade() (
   # With no other export running, reclaim files left by an interrupted attempt.
   find "${dump_dir}" -mindepth 2 -maxdepth 2 -type f -name alldb.partial -delete
   find "${dump_dir}" -mindepth 1 -maxdepth 1 -type d -empty -delete
-  local attempt_dir
+
+  local state dump_id attempt_dir read_only
+  local versions="${FROM_VERSION} ${TO_VERSION}"
+  state="$(doguctl config local_state -d empty)"
+  dump_id="$(doguctl config upgrade_dump_id -d none)"
+  attempt_dir="${dump_dir}/${dump_id}"
+  if [[ "${state}" == upgrading && "${dump_id}" =~ ^[a-zA-Z0-9]{12}$ && -f "${attempt_dir}/alldb.sql" &&
+        -f "${attempt_dir}/versions" && "$(<"${attempt_dir}/versions")" == "${versions}" ]]; then
+    read_only="$(mysql -uroot -NBe 'SELECT @@GLOBAL.super_read_only')"
+    if [[ "${read_only}" == 1 ]]; then
+      # The previous hook may have stopped between the rename and its sync.
+      sync -f "${attempt_dir}"
+      echo "Reusing completed MySQL export ${dump_id}"
+      return 0
+    fi
+  fi
+
   attempt_dir="$(mktemp -d "${dump_dir}/XXXXXXXXXXXX")"
   trap 'rm -f -- "${attempt_dir}/alldb.partial"' EXIT
   # Publish the expected identity first, but only publish the SQL file after a successful dump.
@@ -38,6 +54,9 @@ function run_preupgrade() (
   install -m 600 /dev/null "${attempt_dir}/alldb.partial"
   fenceSourceWrites "${FROM_VERSION}" "${data_volume}"
   dumpData "${FROM_VERSION}" "${TO_VERSION}" "${attempt_dir}/alldb.partial"
+  printf '%s\n' "${versions}" > "${attempt_dir}/versions"
+  # A replay must never see the completed name with only part of the SQL on disk.
+  sync -d "${attempt_dir}/alldb.partial" "${attempt_dir}/versions"
   mv "${attempt_dir}/alldb.partial" "${attempt_dir}/alldb.sql"
   sync -f "${attempt_dir}"
 

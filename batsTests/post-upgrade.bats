@@ -15,6 +15,7 @@ setup() {
   export DATABASE_CONFIG_DIR="${WORKDIR}/mysql-config"
   mkdir -p "${MYSQL_VOLUME}" "${WORKDIR}/var/ces/config" "${DATABASE_CONFIG_DIR}"
   touch "${DATABASE_CONFIG_DIR}/default-config.cnf" "${MYSQL_VOLUME}/original-data"
+  echo empty > "${WORKDIR}/state"
 
   mountpoint() { [[ -d "${2}" ]]; }
   doguctl() {
@@ -31,7 +32,8 @@ setup() {
     esac
   }
   initializeMySql() {
-    [[ -z "$(ls -A "${MYSQL_VOLUME}")" ]] || return 94
+    # mysqld --initialize ignores dot-prefixed entries in the data directory.
+    [[ -z "$(find "${MYSQL_VOLUME}" -mindepth 1 -maxdepth 1 ! -name '.*' -print -quit)" ]] || return 94
     touch "${MYSQL_VOLUME}/initialized"
   }
   startMysqlInBackground() { true & }
@@ -51,10 +53,14 @@ teardown() {
 stage_dump() {
   DUMP_SQL="$1" bash -c '
     source "$STARTUP_DIR/pre-upgrade.sh"
+    mysql() { echo "${SOURCE_READ_ONLY:-1}"; }
     fenceSourceWrites() { :; }
-    dumpData() { printf "%s" "$DUMP_SQL" > "$3"; }
-    run_preupgrade 8.4.11-2 8.4.13-1
-  '
+    dumpData() {
+      [[ ! -e "$WORKDIR/no-space-for-another-dump" ]] || return 28
+      printf "%s" "$DUMP_SQL" > "$3"
+    }
+    run_preupgrade 8.4.11-2 "$1"
+  ' _ "${2:-8.4.13-1}" || return $?
   local id
   id="$(cat "${WORKDIR}/dump-id")"
   staged="${MYSQL_VOLUME}/.mysql-upgrade/${id}/alldb.sql"
@@ -74,17 +80,25 @@ post_upgrade() {
 
 @test "failed import retains the dump, retry starts clean, and successful replay does not wipe data" {
   touch "${WORKDIR}/fail-import"
+  # The same contents as the upgrade's option file do not make this operator file ours.
+  printf '[mysqld]\nsuper_read_only=ON\n' > "${MYSQL_VOLUME}/.mysql-upgrade/source-read-only.cnf"
+  cp "${MYSQL_VOLUME}/.mysql-upgrade/source-read-only.cnf" "${MYSQL_VOLUME}/.my.cnf"
+  mkdir "${MYSQL_VOLUME}/.operator"
+  echo keep > "${MYSQL_VOLUME}/.operator/note"
 
   run post_upgrade 8.4.11-2 8.4.13-1
   assert_failure
   assert_equal "$(cat "${dump}")" 'CREATE TABLE test (id INT);'
   assert_equal "$(cat "${WORKDIR}/state")" 'upgrading'
   assert_file_not_exist "${WORKDIR}/done"
+  assert_file_exist "${MYSQL_VOLUME}/.my.cnf"
 
   rm "${WORKDIR}/fail-import"
   run post_upgrade 8.4.11-2 8.4.13-1
   assert_success
   assert_equal "$(cat "${MYSQL_VOLUME}/imported")" 'CREATE TABLE test (id INT);'
+  assert_file_exist "${MYSQL_VOLUME}/.my.cnf"
+  assert_equal "$(cat "${MYSQL_VOLUME}/.operator/note")" keep
   assert_file_not_exist "${dump}"
   assert_file_exist "${WORKDIR}/done"
 
@@ -92,6 +106,59 @@ post_upgrade() {
   run post_upgrade 8.4.11-2 8.4.13-1
   assert_success
   assert_file_exist "${MYSQL_VOLUME}/new-data"
+}
+
+@test "retrying the active fenced export needs no space for a second dump" {
+  touch "${WORKDIR}/no-space-for-another-dump"
+  run stage_dump 'unused'
+  assert_success
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_success
+  assert_equal "$(cat "${MYSQL_VOLUME}/imported")" 'CREATE TABLE test (id INT);'
+}
+
+@test "another target, a writable source, or an abandoned upgrade requires a fresh export" {
+  stage_dump 'different target' 8.4.13-2
+  assert_equal "$(cat "${staged}")" 'different target'
+  SOURCE_READ_ONLY=0 stage_dump 'writes resumed' 8.4.13-2
+  assert_equal "$(cat "${staged}")" 'writes resumed'
+  echo empty > "${WORKDIR}/state"
+  stage_dump 'new upgrade' 8.4.13-2
+  assert_equal "$(cat "${staged}")" 'new upgrade'
+}
+
+@test "restore removes the 5.7 upgrade-owned option link" {
+  local guard="${MYSQL_VOLUME}/.mysql-upgrade/source-read-only.cnf"
+  printf '[mysqld]\nsuper_read_only=ON\n' > "${guard}"
+  ln "${guard}" "${MYSQL_VOLUME}/.my.cnf"
+  run post_upgrade 5.7.37-4 8.4.13-1
+  assert_success
+  assert_file_not_exist "${MYSQL_VOLUME}/.my.cnf"
+  assert_dir_not_exist "${MYSQL_VOLUME}/.mysql-upgrade"
+}
+
+@test "failed cleanup sync leaves the restore identifiable after a crash" {
+  sync() {
+    local config_volume="${WORKDIR}/var/ces/config"
+    if [[ "$*" == "-f ${config_volume}" && ! -d "${config_volume}/mysql-upgrade" ]]; then
+      return 74
+    fi
+    command sync "$@"
+  }
+  export -f sync
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_equal "${status}" 74
+  assert_file_exist "${WORKDIR}/dump-id"
+  unset -f sync
+
+  # Model the last synced directory entries reappearing on the config volume.
+  mkdir -p "$(dirname "${dump}")/restoring"
+  touch "$(dirname "${dump}")/imported.sql" "${MYSQL_VOLUME}/new-data"
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_success
+  assert_file_exist "${MYSQL_VOLUME}/new-data"
+  assert_file_not_exist "${WORKDIR}/dump-id"
+  assert_dir_not_exist "${WORKDIR}/var/ces/config/mysql-upgrade"
 }
 
 @test "a failed copy can be retried without touching the original database" {
