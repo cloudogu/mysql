@@ -51,6 +51,7 @@ teardown() {
 stage_dump() {
   DUMP_SQL="$1" bash -c '
     source "$STARTUP_DIR/pre-upgrade.sh"
+    fenceSourceWrites() { :; }
     dumpData() { printf "%s" "$DUMP_SQL" > "$3"; }
     run_preupgrade 8.4.11-2 8.4.13-1
   '

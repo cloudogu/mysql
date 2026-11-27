@@ -4,6 +4,12 @@
 
 * MySQL is successfully [installed](Install_Dogu_en.md)
 
+## Writes during upgrades
+
+Before exporting, the Dogu enables `super_read_only` on the source. Clients can still read, but writes can fail with MySQL error 1290, including at commit. Retry rejected transactions on the target after the upgrade. The setting survives a source restart but is not imported into the new database.
+
+If the export fails after this point, leave the source read-only and retry the upgrade. To abandon the upgrade, first stop upgrade retries, verify the original database is intact, and ensure the pending dump will not be imported later. Only then restore the source's previous read-only settings. MySQL 8 stores the upgrade setting in `mysqld-auto.cnf` (use `RESET PERSIST` for `super_read_only`, not a file edit). On 5.7 the hook links `/var/lib/mysql/.my.cnf` to `.mysql-upgrade/source-read-only.cnf`; it refuses to replace an existing option file. Remove only the upgrade-owned link when abandoning the upgrade.
+
 ## Configuration options
 
 The MySQL-Dogu is configured via the registry.

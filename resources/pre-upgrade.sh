@@ -36,12 +36,36 @@ function run_preupgrade() (
   doguctl config upgrade_dump_id "${attempt_dir##*/}"
   doguctl config local_state upgrading
   install -m 600 /dev/null "${attempt_dir}/alldb.partial"
+  fenceSourceWrites "${FROM_VERSION}" "${data_volume}"
   dumpData "${FROM_VERSION}" "${TO_VERSION}" "${attempt_dir}/alldb.partial"
   mv "${attempt_dir}/alldb.partial" "${attempt_dir}/alldb.sql"
   sync -f "${attempt_dir}"
 
   echo "Mysql pre-upgrade done"
 )
+
+fenceSourceWrites() {
+  local source_version="$1" data_volume="$2"
+  echo 'Making the source MySQL server read-only until cutover...'
+  if [[ "${source_version}" == 5.7.* ]]; then
+    # 5.7 has no SET PERSIST. Its Dogu runs mysqld as mysql with the data volume as its home.
+    local guard="${data_volume}/.mysql-upgrade/source-read-only.cnf" options="${data_volume}/.my.cnf"
+    if [[ ! "${guard}" -ef "${options}" ]]; then
+      printf '[mysqld]\nsuper_read_only=ON\n' > "${guard}"
+      chmod 644 "${guard}"
+      # Do not replace an operator's option file. The hard link also survives container replacement.
+      ln -T "${guard}" "${options}"
+    fi
+    sync -f "${data_volume}"
+    mysql -uroot -e 'SET GLOBAL super_read_only = ON'
+  else
+    if [[ "$(mysql -uroot -NBe 'SELECT @@GLOBAL.persisted_globals_load')" != 1 ]]; then
+      echo 'ERROR: Cannot guarantee a read-only source after restart without persisted globals' >&2
+      return 1
+    fi
+    mysql -uroot -e 'SET PERSIST super_read_only = ON'
+  fi
+}
 
 function dumpData(){
     FROM_VERSION="${1}"

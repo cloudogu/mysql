@@ -42,6 +42,7 @@ teardown() {
   mkdir -p "${staging}/oldcompleted" "${staging}/oldabandoned"
   echo 'completed export' > "${staging}/oldcompleted/alldb.sql"
   echo 'interrupted export' > "${staging}/oldabandoned/alldb.partial"
+  fenceSourceWrites() { :; }
   dumpData() {
       echo 'partial export' > "$3"
       exit 123
