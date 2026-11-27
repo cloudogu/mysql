@@ -12,17 +12,17 @@ load '/workspace/target/bats_libs/bats-file/load.bash'
 
 setup() {
   export STARTUP_DIR=/workspace/resources
-  export WORKDIR=/workspace
+  MYSQL_VOLUME="$(mktemp -d "${BATS_TMPDIR}/mysql-data.XXXXXXXX")"
+  export MYSQL_VOLUME
+  mountpoint() { [[ "${2}" == "${MYSQL_VOLUME}" ]]; }
   doguctl="$(mock_create)"
   export bundle
-  export PATH="${PATH}:${BATS_TMPDIR}"
-  ln -s "${doguctl}" "${BATS_TMPDIR}/doguctl"
+  export PATH="${MYSQL_VOLUME}:${PATH}"
+  ln -s "${doguctl}" "${MYSQL_VOLUME}/doguctl"
 }
 
 teardown() {
-  unset STARTUP_DIR
-  unset WORKDIR
-  rm "${BATS_TMPDIR}/doguctl"
+  rm -rf -- "${MYSQL_VOLUME:?}"
 }
 
 @test "versions are the same - no script executed" {
@@ -34,20 +34,26 @@ teardown() {
   assert_equal "$(mock_get_call_num "${doguctl}")" "0"
 }
 
-@test "5.7.37-1 - 8.0.32-1 => Dump starts" {
+@test "failed exports reclaim partials on retry without deleting a completed dump" {
   # shellcheck source=../resources/pre-upgrade.sh
   source "${STARTUP_DIR}/pre-upgrade.sh"
 
+  local staging="${MYSQL_VOLUME}/.mysql-upgrade"
+  mkdir -p "${staging}/oldcompleted" "${staging}/oldabandoned"
+  echo 'completed export' > "${staging}/oldcompleted/alldb.sql"
+  echo 'interrupted export' > "${staging}/oldabandoned/alldb.partial"
+  fenceSourceWrites() { :; }
   dumpData() {
+      echo 'partial export' > "$3"
       exit 123
   }
 
-  run run_preupgrade "5.7.37-1" "8.0.32-1"
-
-  assert_equal "$(mock_get_call_num "${doguctl}")" "1"
-  assert_equal "$(mock_get_call_args "${doguctl}" "1")" 'config local_state upgrading'
-  assert_failure
-  assert_equal "${status}" 123
+  for _ in 1 2; do
+    run run_preupgrade "5.7.37-1" "8.0.32-1"
+    assert_equal "${status}" 123
+    assert_equal "$(find "${staging}" -type f -name 'alldb.*')" "${staging}/oldcompleted/alldb.sql"
+    assert_equal "$(cat "${staging}/oldcompleted/alldb.sql")" 'completed export'
+  done
 }
 
 @test "versionXLessOrEqualThanY() should return true for versions less than or equal to another" {

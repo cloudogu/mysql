@@ -22,8 +22,11 @@ function runMain() {
   removeSocketIfExists
   renderConfigFile
 
-  while [[ "$(doguctl config "local_state" -d "empty")" == "upgrading" ]]; do
-    echo "Upgrade script is running. Waiting..."
+  local state
+  # Check staging first: post-upgrade creates the recovery directory before removing staging.
+  until state="$(doguctl config local_state -d empty)" && [[ "${state}" == empty &&
+    ! -d "${MYSQL_VOLUME}/.mysql-upgrade" && ! -d "${WORKDIR:-}/var/ces/config/mysql-upgrade" ]]; do
+    echo "Waiting for confirmation that no MySQL upgrade is pending..."
     sleep 3
   done
 

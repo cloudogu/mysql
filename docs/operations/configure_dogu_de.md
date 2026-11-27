@@ -4,6 +4,12 @@
 
 * MySQL ist erfolgreich [installiert](Install_Dogu_de.md)
 
+## Schreibzugriffe während eines Upgrades
+
+Vor dem Export aktiviert das Dogu `super_read_only` auf der Quelldatenbank. Clients können weiterhin lesen, aber Schreibzugriffe können mit MySQL-Fehler 1290 scheitern, auch beim Commit. Abgewiesene Transaktionen nach dem Upgrade auf dem Ziel wiederholen. Der Schreibschutz bleibt bei einem Neustart der Quelle erhalten, wird aber nicht in die neue Datenbank importiert.
+
+Schlägt der Export danach fehl, den Schreibschutz beibehalten und das Upgrade erneut versuchen. Bei einem endgültigen Abbruch zuerst weitere Upgrade-Versuche stoppen, die Originaldatenbank auf Vollständigkeit prüfen und sicherstellen, dass der ausstehende Dump später nicht importiert wird. Erst dann die vorherigen Schreibschutzeinstellungen der Quelle wiederherstellen. MySQL 8 speichert die Einstellung in `mysqld-auto.cnf` (`RESET PERSIST` für `super_read_only` verwenden, nicht die Datei editieren). Unter 5.7 verlinkt der Hook `/var/lib/mysql/.my.cnf` mit `.mysql-upgrade/source-read-only.cnf`; eine vorhandene Konfigurationsdatei ersetzt er nicht. Beim Abbruch nur den vom Upgrade angelegten Link entfernen.
+
 ## Konfigurationsmöglichkeiten
 
 Das MySQL-Dogu wird über die Registry konfiguriert.
