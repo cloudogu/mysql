@@ -26,7 +26,7 @@ MySQL bietet die folgenden Einstellungen:
 
 #### Physisches Speicherlimit
 * Konfigurationsschlüssel-Pfad: `container_config/memory_limit`
-* Inhalt: Beschränkt den Speicher (RAM) des MySQL-Docker-Containers. `0b` deaktiviert das Speicherlimit. Wenn dieser Wert mit einem Nicht-Null-Wert gesetzt wurde, werden 80 % des Speichers auf MySQLs wichtigster Systemvariable `innodb_buffer_pool_size` abgebildet. Ansonsten erhält `innodb_buffer_pool_size` standardmäßig 512 MB RAM. Um diesen Wert erfolgreich anzuwenden, muss der MySQL-Container mit `cesapp recreate` neu erzeugt werden.
+* Inhalt: Beschränkt den Speicher (RAM) des MySQL-Docker-Containers. `0b` deaktiviert das Speicherlimit. Aus dem tatsächlichen Speicherlimit des Containers wird die MySQL-Systemvariable `innodb_buffer_pool_size` berechnet (siehe [Verhalten von RAM-Konfigurationen](#verhalten-von-ram-konfigurationen)). Ohne Speicherlimit erhält `innodb_buffer_pool_size` 512 MiB RAM. Um diesen Wert erfolgreich anzuwenden, muss der MySQL-Container mit `cesapp recreate` neu erzeugt werden.
 * Datentyp: Binäre Speicherangabe
 * Valide Werte: Ganzzahl gefolgt von [b,k,m,g] (byte, kibibyte, mebibyte, gibibyte)
 * Beispiel: `1750m` = 1750 MebiByte
@@ -43,7 +43,9 @@ MySQL bietet die folgenden Einstellungen:
 
 ### Verhalten von RAM-Konfigurationen
 
-Wenn kein Speicherlimit gesetzt (siehe `container_config/memory_limit`) wurde, dann nimmt MySQL 512 MB für die Systemvariable `innodb_buffer_pool_size`. Wenn andererseits ein Speicherlimit gesetzt wurde, dann werden 80 % des konfigurierten Speichers für diese Systemvariable verwendet. Weitere Informationen hierzu bietet die [MySQL-Dokumentation](https://MySQL.com/kb/en/innodb-buffer-pool/).
+Beim Start liest das Dogu das Speicherlimit des Containers aus der cgroup (`/sys/fs/cgroup/memory.max`, bei cgroup v1 `/sys/fs/cgroup/memory/memory.limit_in_bytes`). Hat der Container kein Speicherlimit, nimmt MySQL 512 MiB für die Systemvariable `innodb_buffer_pool_size`.
+
+Ist ein Speicherlimit gesetzt (siehe `container_config/memory_limit`), erhält `innodb_buffer_pool_size` die größte Zweierpotenz, die höchstens die Hälfte des Limits beträgt, mindestens aber 128 MiB. Die andere Hälfte bleibt frei für Verbindungen, Sortierpuffer, temporäre Tabellen und Dump-Importe. Beispiele: 600 MiB → 256 MiB, 800 MiB → 256 MiB, 1 GiB → 512 MiB, 2 GiB → 1 GiB, 4 GiB → 2 GiB, 8 GiB → 4 GiB. Weitere Informationen hierzu bietet die [MySQL-Dokumentation](https://MySQL.com/kb/en/innodb-buffer-pool/).
 
 ### Verhalten von Auslagerungsspeicher
 

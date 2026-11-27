@@ -1,9 +1,12 @@
 [mysqld]
 
-# the working set in innodb_buffer_pool_size should take up to 80 % of the memory
-# but at least 512 MB should be used (recommended settings vary from 2 to 16 GB depending on the actual DB server load)
-# see https://wiki.alpinelinux.org/wiki/Production_DataBases_:_mysql
+# innodb_buffer_pool_size is calculated in util.sh: the largest power of two that is at most half of the
+# container memory limit (at least 128 MiB); 512 MiB without a memory limit
+# see https://dev.mysql.com/doc/refman/8.4/en/innodb-buffer-pool-resize.html
 innodb_buffer_pool_size={{ .Env.Get "INNODB_BUFFER_POOL_SIZE_IN_BYTES"}}
+# fixed instead of derived from the CPU count, so that the rounding of innodb_buffer_pool_size is predictable
+# (only takes effect from 1 GiB on)
+innodb_buffer_pool_instances=8
 innodb_redo_log_capacity=16777216
 
 # The Performance Schema is a feature for monitoring server performance in which the DB server populates internal tables with said monitoring data.

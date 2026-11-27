@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- [#68] Detect the container memory limit from the cgroup (v2 and v1); the detection always failed before, so `innodb_buffer_pool_size` was fixed to 512 MiB
+
+### Changed
+- [#68] `innodb_buffer_pool_size` is the largest power of two that is at most half of the memory limit (at least 128 MiB); `innodb_buffer_pool_instances` is set to 8
 
 ## [v8.4.13-1] - 2026-11-04
 ### Changed

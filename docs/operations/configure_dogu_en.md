@@ -27,7 +27,7 @@ MySQL provides the following settings:
 
 #### Physical memory limit
 * Configuration key path: `container_config/memory_limit`
-* Content: Limits the memory (RAM) of the MySQL Docker container. `0b` will disable swapping. If this value is set to a non-zero value, 80% of the memory is mapped to MySQL's main system variable `innodb_buffer_pool_size`. Otherwise, `innodb_buffer_pool_size` receives 512 MB of RAM by default. To successfully apply this value, the MySQL container must be re-created using `cesapp recreate`. 
+* Content: Limits the memory (RAM) of the MySQL Docker container. `0b` disables the memory limit. The MySQL system variable `innodb_buffer_pool_size` is calculated from the actual memory limit of the container (see [Behavior of RAM configurations](#behavior-of-ram-configurations)). Without a memory limit, `innodb_buffer_pool_size` receives 512 MiB of RAM. To successfully apply this value, the MySQL container must be re-created using `cesapp recreate`. 
 * Data type: Binary memory specification.
 * Valid values: Integer followed by [b,k,m,g] (byte, kibibyte, mebibyte, gibibyte)
 * Example: `1750m` = 1750 MebiByte
@@ -44,7 +44,9 @@ MySQL provides the following settings:
 
 ### Behavior of RAM configurations
 
-If no memory limit has been set (see `container_config/memory_limit`), then MySQL takes 512 MB for the `innodb_buffer_pool_size` system variable. On the other hand, if a memory limit has been set, then 80 % of the configured memory is used for this system variable. See the [MySQL documentation](https://MySQL.com/kb/en/innodb-buffer-pool/) for more information.
+On startup, the dogu reads the memory limit of the container from the cgroup (`/sys/fs/cgroup/memory.max`, or `/sys/fs/cgroup/memory/memory.limit_in_bytes` with cgroup v1). If the container has no memory limit, MySQL takes 512 MiB for the `innodb_buffer_pool_size` system variable.
+
+If a memory limit is set (see `container_config/memory_limit`), `innodb_buffer_pool_size` gets the largest power of two that is at most half of the limit, but at least 128 MiB. The other half stays free for connections, sort buffers, temporary tables and dump imports. Examples: 600 MiB → 256 MiB, 800 MiB → 256 MiB, 1 GiB → 512 MiB, 2 GiB → 1 GiB, 4 GiB → 2 GiB, 8 GiB → 4 GiB. See the [MySQL documentation](https://MySQL.com/kb/en/innodb-buffer-pool/) for more information.
 
 ### Behavior of Swap memory configurations
 
