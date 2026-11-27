@@ -3,7 +3,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-function run_preupgrade() {
+function run_preupgrade() (
   FROM_VERSION="${1}"
   TO_VERSION="${2}"
 
@@ -21,8 +21,17 @@ function run_preupgrade() {
   fi
   local dump_dir="${data_volume}/.mysql-upgrade"
   install -d -m 700 "${dump_dir}"
+  exec 9>>"${dump_dir}/export.lock"
+  if ! flock -n 9; then
+    echo "ERROR: Another MySQL export is running" >&2
+    return 1
+  fi
+  # With no other export running, reclaim files left by an interrupted attempt.
+  find "${dump_dir}" -mindepth 2 -maxdepth 2 -type f -name alldb.partial -delete
+  find "${dump_dir}" -mindepth 1 -maxdepth 1 -type d -empty -delete
   local attempt_dir
   attempt_dir="$(mktemp -d "${dump_dir}/XXXXXXXXXXXX")"
+  trap 'rm -f -- "${attempt_dir}/alldb.partial"' EXIT
   # Publish the expected identity first, but only publish the SQL file after a successful dump.
   doguctl config upgrade_dump_id "${attempt_dir##*/}"
   doguctl config local_state upgrading
@@ -32,7 +41,7 @@ function run_preupgrade() {
   sync -f "${attempt_dir}"
 
   echo "Mysql pre-upgrade done"
-}
+)
 
 function dumpData(){
     FROM_VERSION="${1}"

@@ -72,15 +72,12 @@ function run_postupgrade() {
       echo "ERROR: Previous restore did not stop cleanly; inspect ${dump_dir} before retrying" >&2
       return 1
     fi
-    if [[ -f "${staged_dump}" ]]; then
-      cp "${staged_dump}" "${dump_dir}/alldb.partial"
-      mv "${dump_dir}/alldb.partial" "${dump_file}"
-    elif [[ ! -f "${dump_file}" ]]; then
+    if ! prepareRecoveryDump "${staged_dump}" "${dump_dir}"; then
+      # The data directory is untouched. A retry can repeat the copy from staging.
+      rm -f "${dump_dir}/alldb.partial"
       rmdir "${dump_dir}/restoring"
-      echo "ERROR: Expected upgrade dump is missing; refusing to initialize MySQL" >&2
       return 1
     fi
-    sync -f "${dump_dir}"
 
     # MySQL needs an empty data directory, including when retrying a failed import.
     find "${MYSQL_VOLUME}" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
@@ -100,7 +97,7 @@ function run_postupgrade() {
     doguctl state "upgrade done"
     doguctl config --rm "local_state"
   fi
-  # Cleanup may itself be retried after releasing startup.
+  # Startup also waits for the recovery directory to disappear.
   rm -f "${dump_dir}/imported.sql"
   if [[ -d "${dump_dir}" ]]; then
     rmdir "${dump_dir}"
@@ -111,6 +108,18 @@ function run_postupgrade() {
   doguctl config --rm upgrade_dump_id
 
   echo "Mysql post-upgrade done"
+}
+
+prepareRecoveryDump() {
+  local staged_dump="$1" dump_dir="$2"
+  if [[ -f "${staged_dump}" ]]; then
+    cp "${staged_dump}" "${dump_dir}/alldb.partial" || return 1
+    mv "${dump_dir}/alldb.partial" "${dump_dir}/alldb.sql" || return 1
+  elif [[ ! -f "${dump_dir}/alldb.sql" ]]; then
+    echo "ERROR: Expected upgrade dump is missing; refusing to initialize MySQL" >&2
+    return 1
+  fi
+  sync -f "${dump_dir}"
 }
 
 restoreDump() {

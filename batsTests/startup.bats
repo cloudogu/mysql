@@ -43,6 +43,7 @@ teardown() {
 
   mock_set_status "${mysqld}" 0
   mock_set_status "${doguctl}" 0
+  mock_set_output "${doguctl}" "empty" 3
   mock_set_output "${doguctl}" "NO" 4
   mock_set_status "${runuser}" 0
 
@@ -64,9 +65,6 @@ teardown() {
   assert_equal "$(mock_get_call_args "${doguctl}" "5")" "config first_start_done YES"
   assert_equal "$(mock_get_call_args "${doguctl}" "6")" "config --default WARN logging/root"
   assert_equal "$(mock_get_call_args "${doguctl}" "7")" "state ready"
-  assert_equal "$(mock_get_call_args "${doguctl}" "8")" "config local_state -d empty"
-  assert_equal "$(mock_get_call_args "${doguctl}" "9")" "config --rm local_state"
-  assert_equal "$(mock_get_call_num "${doguctl}")" "9"
 }
 
 @test "applySecurityConfiguration" {

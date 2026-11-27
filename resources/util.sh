@@ -120,9 +120,6 @@ function startMysql() {
   echo "Starting mysql..."
   setDoguLogLevel
   doguctl state "ready"
-  if [[ "$(doguctl config "local_state" -d "empty")" != "empty" ]]; then
-    doguctl config --rm "local_state"
-  fi
   runuser -u mysql -- mysqld  --datadir="${MYSQL_VOLUME}" --log_error_verbosity=${DOGU_LOGLEVEL}
 }
 

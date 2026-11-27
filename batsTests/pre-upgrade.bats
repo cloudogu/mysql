@@ -34,20 +34,25 @@ teardown() {
   assert_equal "$(mock_get_call_num "${doguctl}")" "0"
 }
 
-@test "5.7.37-1 - 8.0.32-1 => Dump starts" {
+@test "failed exports reclaim partials on retry without deleting a completed dump" {
   # shellcheck source=../resources/pre-upgrade.sh
   source "${STARTUP_DIR}/pre-upgrade.sh"
 
+  local staging="${MYSQL_VOLUME}/.mysql-upgrade"
+  mkdir -p "${staging}/oldcompleted" "${staging}/oldabandoned"
+  echo 'completed export' > "${staging}/oldcompleted/alldb.sql"
+  echo 'interrupted export' > "${staging}/oldabandoned/alldb.partial"
   dumpData() {
       echo 'partial export' > "$3"
       exit 123
   }
 
-  run run_preupgrade "5.7.37-1" "8.0.32-1"
-
-  assert_failure
-  assert_equal "${status}" 123
-  assert_equal "$(find "${MYSQL_VOLUME}" -name alldb.sql)" ''
+  for _ in 1 2; do
+    run run_preupgrade "5.7.37-1" "8.0.32-1"
+    assert_equal "${status}" 123
+    assert_equal "$(find "${staging}" -type f -name 'alldb.*')" "${staging}/oldcompleted/alldb.sql"
+    assert_equal "$(cat "${staging}/oldcompleted/alldb.sql")" 'completed export'
+  done
 }
 
 @test "versionXLessOrEqualThanY() should return true for versions less than or equal to another" {

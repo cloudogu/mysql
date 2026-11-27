@@ -93,6 +93,65 @@ post_upgrade() {
   assert_file_exist "${MYSQL_VOLUME}/new-data"
 }
 
+@test "a failed copy can be retried without touching the original database" {
+  cp() { printf 'incomplete' > "$2"; return 1; }
+  export -f cp
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_failure
+  assert_file_exist "${MYSQL_VOLUME}/original-data"
+  assert_file_exist "${staged}"
+  assert_file_not_exist "${WORKDIR}/done"
+
+  unset -f cp
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_success
+  assert_equal "$(cat "${MYSQL_VOLUME}/imported")" 'CREATE TABLE test (id INT);'
+}
+
+# Probe one startup iteration without a wall-clock timeout. A waiting startup exits at sleep.
+probe_startup() {
+  bash -c '
+    source "$STARTUP_DIR/startup.sh"
+    removeSocketIfExists() { :; }
+    renderConfigFile() { :; }
+    doguctl() { echo empty; [[ ! -f "$WORKDIR/read-error" ]]; }
+    initializeMySql() { touch "$WORKDIR/startup-initialized"; }
+    startMysql() { touch "$WORKDIR/started"; }
+    sleep() { exit 75; }
+    runMain
+  '
+}
+
+@test "normal startup waits across the dump handoff and on an unreadable upgrade state" {
+  # Startup sees an empty registry state even though the export is pending.
+  run probe_startup
+  assert_equal "${status}" 75
+  assert_file_not_exist "${WORKDIR}/startup-initialized"
+
+  # Run startup again while post-upgrade is importing, after the staging directory was wiped.
+  export -f probe_startup
+  mysql() {
+    local status=0
+    probe_startup >&2 || status=$?
+    [[ "${status}" == 75 ]] || return 1
+    cat > "${MYSQL_VOLUME}/imported"
+  }
+  export -f mysql
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_success
+  assert_file_not_exist "${WORKDIR}/startup-initialized"
+  assert_file_not_exist "${WORKDIR}/started"
+
+  touch "${WORKDIR}/read-error"
+  run probe_startup
+  assert_equal "${status}" 75
+  assert_file_not_exist "${WORKDIR}/startup-initialized"
+  rm "${WORKDIR}/read-error"
+  run probe_startup
+  assert_success
+  assert_file_exist "${WORKDIR}/started"
+}
+
 @test "missing dump blocks upgrade but an intentional empty dump does not" {
   rm "${staged}"
   run post_upgrade 8.4.11-2 8.4.13-1
