@@ -4,8 +4,8 @@ set -o nounset
 set -o pipefail
 
 MYSQL_VERSION="${1}"
-# MySQL apt repo component of the LTS series MYSQL_VERSION belongs to, e.g. 1.2.3 -> mysql-1.2-lts
-MYSQL_APT_COMPONENT="mysql-${MYSQL_VERSION%.*}-lts"
+# Both 8.4.13 and 8.4.13.1 belong to the mysql-8.4-lts APT component.
+MYSQL_APT_COMPONENT="mysql-$(cut -d. -f1,2 <<< "${MYSQL_VERSION}")-lts"
 # Debian release of the base image
 DEBIAN_CODENAME="$(. /etc/os-release && echo "${VERSION_CODENAME}")"
 DEBIAN_VERSION_ID="$(. /etc/os-release && echo "${VERSION_ID}")"

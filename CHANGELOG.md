@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - [#66] Keep the upgrade dump on persistent storage until MySQL restores it successfully.
+- [#66] Fix the image build by pinning MySQL 8.4.13.1 from the 8.4 LTS APT repository.
 
 ## [v8.4.13-1] - 2026-11-04
 ### Changed
