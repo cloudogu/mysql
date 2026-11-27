@@ -94,6 +94,14 @@ post_upgrade() {
   assert_file_exist "${MYSQL_VOLUME}/.my.cnf"
 
   rm "${WORKDIR}/fail-import"
+  # Staging is gone after the import started. A failed sync must keep the only dump.
+  sync() { return 74; }
+  export -f sync
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_failure
+  assert_equal "$(cat "${dump}")" 'CREATE TABLE test (id INT);'
+  unset -f sync
+
   run post_upgrade 8.4.11-2 8.4.13-1
   assert_success
   assert_equal "$(cat "${MYSQL_VOLUME}/imported")" 'CREATE TABLE test (id INT);'
@@ -171,6 +179,22 @@ post_upgrade() {
   assert_file_not_exist "${WORKDIR}/done"
 
   unset -f cp
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_success
+  assert_equal "$(cat "${MYSQL_VOLUME}/imported")" 'CREATE TABLE test (id INT);'
+}
+
+@test "a failed recovery sync frees the copy so a one-dump volume can retry" {
+  sync() { return 74; }
+  export -f sync
+  run post_upgrade 8.4.11-2 8.4.13-1
+  assert_failure
+  assert_equal "$(cat "${staged}")" 'CREATE TABLE test (id INT);'
+  assert_file_exist "${MYSQL_VOLUME}/original-data"
+  assert_file_not_exist "${dump}"
+  assert_file_not_exist "${dump%/*}/alldb.partial"
+
+  unset -f sync
   run post_upgrade 8.4.11-2 8.4.13-1
   assert_success
   assert_equal "$(cat "${MYSQL_VOLUME}/imported")" 'CREATE TABLE test (id INT);'

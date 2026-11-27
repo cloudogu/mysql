@@ -73,8 +73,11 @@ function run_postupgrade() {
       return 1
     fi
     if ! prepareRecoveryDump "${staged_dump}" "${dump_dir}"; then
-      # The data directory is untouched. A retry can repeat the copy from staging.
       rm -f "${dump_dir}/alldb.partial"
+      # A failed sync can leave a full-sized copy. Free it only if staging still holds the dump.
+      if [[ -f "${staged_dump}" ]]; then
+        rm -f "${dump_file}"
+      fi
       rmdir "${dump_dir}/restoring"
       return 1
     fi
